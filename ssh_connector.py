@@ -61,6 +61,10 @@ def cli():
     filter_term = ""  # Initialize filter_term
 
     while True:
+        selectable_hosts = (
+            []
+        )  # Initialize selectable_hosts at the beginning of each loop iteration
+        current_display_index = 1  # Initialize current_display_index here as well
         table = Table(title="SSH Hosts available:")
         table.add_column("No.", style="cyan", no_wrap=True)
         table.add_column("Host", style="magenta")
