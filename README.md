@@ -1,5 +1,7 @@
 # SSH Connector
 
+A CLI tool to simplify SSH connections by providing an interactive menu of hosts from your `~/.ssh/config` file.
+
 ### Example
 
 Let's assume your `~/.ssh/config` file contains the following entries:
@@ -72,8 +74,6 @@ Enter the number of the host to connect to (or 'q' to quit, 'f' to filter):
 ```
 
 After selecting a host (e.g., `prod-app-1`), the tool will execute the appropriate SSH command, handling `ProxyJump` automatically if configured.
-
-A CLI tool to simplify SSH connections by providing an interactive menu of hosts from your `~/.ssh/config` file.
 
 ## Features
 
