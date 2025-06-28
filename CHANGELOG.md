@@ -13,3 +13,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI to list and connect to SSH hosts.
 - Display SSH hosts in order of appearance from config file.
 - Improve SSH host list formatting for consistent alignment.
+- Implement interactive filtering and rich table display for SSH hosts.
