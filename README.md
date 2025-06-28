@@ -12,7 +12,7 @@ A CLI tool to simplify SSH connections by providing an interactive menu of hosts
 
 ### Prerequisites
 
-- Python 3.7+
+- Python 3.13+
 - `uv` (recommended)
 
 ### Using pip
