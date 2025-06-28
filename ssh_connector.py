@@ -4,6 +4,8 @@ import subprocess
 from pathlib import Path
 
 import click
+from rich.console import Console
+from rich.table import Table
 
 
 def get_ssh_hosts():
@@ -54,20 +56,36 @@ def cli():
         click.echo("No valid SSH hosts found.")
         return
 
-    click.echo(click.style("SSH Hosts available:", fg="green"))
-    max_width = len(str(len(hosts)))
-    for i, host in enumerate(hosts, 1):
-        click.echo(f"[{i:>{max_width}}] {host}")
+    console = Console()
 
     while True:
+        table = Table(title="SSH Hosts available:")
+        table.add_column("No.", style="cyan", no_wrap=True)
+        table.add_column("Host", style="magenta")
+
+        display_hosts = []
+        for i, host in enumerate(hosts, 1):
+            display_hosts.append((str(i), host))
+
+        for row in display_hosts:
+            table.add_row(*row)
+
+        console.print(table)
+
         try:
             choice_str = click.prompt(
-                "Enter the number of the host to connect to (or 'q' to quit)", type=str
+                "Enter the number of the host to connect to (or 'q' to quit, 'f' to filter)", type=str
             )
 
             if choice_str.lower() == "q":
                 click.echo("Exiting.")
                 break
+            elif choice_str.lower() == "f":
+                filter_term = click.prompt("Enter filter term", type=str)
+                hosts = [host for host in hosts if filter_term.lower() in host.lower()]
+                if not hosts:
+                    click.echo(click.style("No hosts found matching the filter.", fg="red"))
+                continue # Restart the loop to display filtered hosts
 
             choice = int(choice_str)
             if 1 <= choice <= len(hosts):
@@ -76,13 +94,7 @@ def cli():
                     click.style(f"Connecting to {selected_host}...", fg="yellow")
                 )
 
-                # Use subprocess.run to execute the ssh command
-                # This will hand over control of the terminal to the ssh process
                 try:
-                    # Using os.execvp is better as it replaces the current process
-                    # with ssh, making it feel like a native command.
-                    # However, it's less portable and doesn't return.
-                    # subprocess.run is a safer, more universal choice.
                     subprocess.run(["ssh", selected_host], check=True)
                 except FileNotFoundError:
                     click.echo(
@@ -92,19 +104,17 @@ def cli():
                         )
                     )
                 except subprocess.CalledProcessError as e:
-                    # This error is often just the user exiting the ssh session
-                    # with a non-zero status, so we can often ignore it.
                     click.echo(
                         click.style(
                             f"SSH session for {selected_host} ended.", fg="blue"
                         )
                     )
-                break  # Exit loop after attempting connection
+                break
             else:
                 click.echo(click.style("Invalid number. Please try again.", fg="red"))
         except ValueError:
             click.echo(
-                click.style("Invalid input. Please enter a number or 'q'.", fg="red")
+                click.style("Invalid input. Please enter a number, 'q', or 'f'.", fg="red")
             )
         except (EOFError, KeyboardInterrupt):
             click.echo("\nExiting.")

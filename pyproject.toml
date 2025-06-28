@@ -17,6 +17,7 @@ keywords = ["ssh", "cli", "automation"]
 
 dependencies = [
     "click",
+    "rich",
 ]
 
 [project.urls]
