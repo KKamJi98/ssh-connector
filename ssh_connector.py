@@ -67,7 +67,7 @@ def cli():
         )  # Initialize selectable_hosts at the beginning of each loop iteration
         current_display_index = 1  # Initialize current_display_index here as well
         table = Table(
-            title="[bold cyan]SSH Hosts available:[/bold cyan]",
+            title="[bold cyan]SSH Hosts[/bold cyan]",
             box=box.DOUBLE_EDGE,
             border_style="cyan",
         )
