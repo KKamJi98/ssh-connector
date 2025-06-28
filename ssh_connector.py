@@ -94,15 +94,17 @@ def cli():
             table.add_row(str(current_display_index), host)
             current_display_index += 1
 
+        console.print(table)
+
         if jump_hosts:
-            table.add_section()
-            table.add_row("", "[bold yellow]JUMP-HOSTS[/bold yellow]")
+            jump_table = Table(title="[bold yellow]JUMP-HOSTS[/bold yellow]")
+            jump_table.add_column("No.", style="cyan", no_wrap=True)
+            jump_table.add_column("Host", style="magenta")
             for host in jump_hosts:
                 selectable_hosts.append(host)
-                table.add_row(str(current_display_index), host)
+                jump_table.add_row(str(current_display_index), host)
                 current_display_index += 1
-
-        console.print(table)
+            console.print(jump_table)
 
         try:
             choice_str = click.prompt(
