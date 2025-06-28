@@ -85,26 +85,18 @@ def cli():
         ]
         jump_hosts = [host for host in current_display_hosts if "jump" in host.lower()]
 
-        selectable_hosts = (
-            []
-        )  # This will store the hosts in the order they are displayed for selection
-        display_rows = []
-        current_display_index = 1
-
         for host in normal_hosts:
             selectable_hosts.append(host)
-            display_rows.append((str(current_display_index), host))
+            table.add_row(str(current_display_index), host)
             current_display_index += 1
 
         if jump_hosts:
-            display_rows.append(("", "JUMP-HOSTS"))  # Separator
+            table.add_section()
+            table.add_row("", "[bold yellow]JUMP-HOSTS[/bold yellow]")
             for host in jump_hosts:
                 selectable_hosts.append(host)
-                display_rows.append((str(current_display_index), host))
+                table.add_row(str(current_display_index), host)
                 current_display_index += 1
-
-        for row in display_rows:
-            table.add_row(*row)
 
         console.print(table)
 
