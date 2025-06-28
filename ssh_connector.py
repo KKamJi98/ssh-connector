@@ -55,8 +55,9 @@ def cli():
         return
 
     click.echo(click.style("SSH Hosts available:", fg="green"))
+    max_width = len(str(len(hosts)))
     for i, host in enumerate(hosts, 1):
-        click.echo(f"[{i}] {host}")
+        click.echo(f"[{i:>{max_width}}] {host}")
 
     while True:
         try:
