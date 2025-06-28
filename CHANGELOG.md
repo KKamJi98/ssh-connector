@@ -11,3 +11,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial project setup.
 - CLI to list and connect to SSH hosts.
+- Display SSH hosts in order of appearance from config file.
