@@ -74,7 +74,8 @@ def cli():
 
         try:
             choice_str = click.prompt(
-                "Enter the number of the host to connect to (or 'q' to quit, 'f' to filter)", type=str
+                "Enter the number of the host to connect to (or 'q' to quit, 'f' to filter)",
+                type=str,
             )
 
             if choice_str.lower() == "q":
@@ -84,8 +85,10 @@ def cli():
                 filter_term = click.prompt("Enter filter term", type=str)
                 hosts = [host for host in hosts if filter_term.lower() in host.lower()]
                 if not hosts:
-                    click.echo(click.style("No hosts found matching the filter.", fg="red"))
-                continue # Restart the loop to display filtered hosts
+                    click.echo(
+                        click.style("No hosts found matching the filter.", fg="red")
+                    )
+                continue  # Restart the loop to display filtered hosts
 
             choice = int(choice_str)
             if 1 <= choice <= len(hosts):
@@ -114,7 +117,9 @@ def cli():
                 click.echo(click.style("Invalid number. Please try again.", fg="red"))
         except ValueError:
             click.echo(
-                click.style("Invalid input. Please enter a number, 'q', or 'f'.", fg="red")
+                click.style(
+                    "Invalid input. Please enter a number, 'q', or 'f'.", fg="red"
+                )
             )
         except (EOFError, KeyboardInterrupt):
             click.echo("\nExiting.")
