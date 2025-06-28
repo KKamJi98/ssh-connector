@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 import click
+from rich import box
 from rich.console import Console
 from rich.table import Table
 
@@ -97,7 +98,11 @@ def cli():
         console.print(table)
 
         if jump_hosts:
-            jump_table = Table(title="[bold yellow]JUMP-HOSTS[/bold yellow]")
+            jump_table = Table(
+                title="[bold yellow]JUMP-HOSTS[/bold yellow]",
+                box=box.DOUBLE_EDGE,
+                border_style="yellow",
+            )
             jump_table.add_column("No.", style="cyan", no_wrap=True)
             jump_table.add_column("Host", style="magenta")
             for host in jump_hosts:
