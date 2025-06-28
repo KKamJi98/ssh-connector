@@ -1,5 +1,78 @@
 # SSH Connector
 
+### Example
+
+Let's assume your `~/.ssh/config` file contains the following entries:
+
+```
+Host dev-app-1
+    Hostname 192.168.1.10
+    User devuser
+
+Host dev-db-1
+    Hostname 192.168.1.11
+    User devuser
+
+Host stg-app-1
+    Hostname 192.168.2.10
+    User stguser
+    ProxyJump jump-stg
+
+Host stg-db-1
+    Hostname 192.168.2.11
+    User stguser
+    ProxyJump jump-stg
+
+Host prod-app-1
+    Hostname 10.0.0.10
+    User produser
+    ProxyJump jump-prod
+
+Host prod-db-1
+    Hostname 10.0.0.11
+    User produser
+    ProxyJump jump-prod
+
+Host jump-dev
+    Hostname 172.16.0.1
+    User jumpdev
+
+Host jump-stg
+    Hostname 172.16.0.2
+    User jumpstg
+
+Host jump-prod
+    Hostname 172.16.0.3
+    User jumpprod
+```
+
+When you run `ssh-connector`, you will see an interactive menu like this:
+
+```
+      SSH Hosts
+╔═════╤═════════════╗
+║ No. │ Host        ║
+╟─────┼─────────────╢
+║ 1   │ dev-app-1   ║
+║ 2   │ dev-db-1    ║
+║ 3   │ stg-app-1   ║
+║ 4   │ stg-db-1    ║
+║ 5   │ prod-app-1  ║
+║ 6   │ prod-db-1   ║
+╚═════╧═════════════╝
+     JUMP-HOSTS
+╔═════╤═════════════╗
+║ No. │ Host        ║
+╟─────┼─────────────╢
+║ 7   │ jump-dev    ║
+║ 8   │ jump-stg    ║
+║ 9   │ jump-prod   ║
+╚═════╧═════════════╝
+Enter the number of the host to connect to (or 'q' to quit, 'f' to filter):
+```
+
+After selecting a host (e.g., `prod-app-1`), the tool will execute the appropriate SSH command, handling `ProxyJump` automatically if configured.
+
 A CLI tool to simplify SSH connections by providing an interactive menu of hosts from your `~/.ssh/config` file.
 
 ## Features
