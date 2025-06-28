@@ -40,7 +40,7 @@ def get_ssh_hosts():
         )
         return []
 
-    return sorted(list(set(hosts)))  # Return sorted unique hosts
+    return list(dict.fromkeys(hosts))  # Return unique hosts in order of appearance
 
 
 @click.command()
