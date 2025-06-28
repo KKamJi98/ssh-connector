@@ -8,6 +8,7 @@
 - **커밋:** Conventional Commits 사양을 따릅니다.
 - **버전 관리:** 시맨틱 버전 관리(vX.X.X)를 사용합니다.
 - **포맷팅:** 코드는 `black`과 `isort`로 포맷팅합니다.
+- **코드 품질:** `black`, `isort`, `pytest`를 모두 통과한 상태에서만 GitHub에 커밋 및 푸시합니다.
 
 ## Requirement
 
