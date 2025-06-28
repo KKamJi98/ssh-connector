@@ -43,7 +43,7 @@ This will display a list of your configured SSH hosts. You can then select a hos
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/TaeJi-Kim/ssh-connector.git
+   git clone https://github.com/KKamJi98/ssh-connector.git
    cd ssh-connector
    ```
 

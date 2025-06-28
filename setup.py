@@ -27,7 +27,7 @@ setup(
     description="A CLI tool to easily select and connect to SSH hosts from your config file.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/TaeJi-Kim/ssh-connector",
+    url="https://github.com/KKamJi98/ssh-connector",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
