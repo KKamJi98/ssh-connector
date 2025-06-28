@@ -52,22 +52,58 @@ def cli():
     """
     hosts = get_ssh_hosts()
 
-    if not hosts:
+    all_available_hosts = get_ssh_hosts()
+    if not all_available_hosts:
         click.echo("No valid SSH hosts found.")
         return
 
     console = Console()
+    filter_term = ""  # Initialize filter_term
 
     while True:
         table = Table(title="SSH Hosts available:")
         table.add_column("No.", style="cyan", no_wrap=True)
         table.add_column("Host", style="magenta")
 
-        display_hosts = []
-        for i, host in enumerate(hosts, 1):
-            display_hosts.append((str(i), host))
+        # Apply filter if present
+        if filter_term:
+            current_display_hosts = [
+                host
+                for host in all_available_hosts
+                if filter_term.lower() in host.lower()
+            ]
+        else:
+            current_display_hosts = all_available_hosts
 
-        for row in display_hosts:
+        if not current_display_hosts:
+            click.echo(click.style("No hosts found matching the filter.", fg="red"))
+            filter_term = ""  # Reset filter if no matches
+            continue
+
+        normal_hosts = [
+            host for host in current_display_hosts if "jump" not in host.lower()
+        ]
+        jump_hosts = [host for host in current_display_hosts if "jump" in host.lower()]
+
+        selectable_hosts = (
+            []
+        )  # This will store the hosts in the order they are displayed for selection
+        display_rows = []
+        current_display_index = 1
+
+        for host in normal_hosts:
+            selectable_hosts.append(host)
+            display_rows.append((str(current_display_index), host))
+            current_display_index += 1
+
+        if jump_hosts:
+            display_rows.append(("", "JUMP-HOSTS"))  # Separator
+            for host in jump_hosts:
+                selectable_hosts.append(host)
+                display_rows.append((str(current_display_index), host))
+                current_display_index += 1
+
+        for row in display_rows:
             table.add_row(*row)
 
         console.print(table)
@@ -83,16 +119,11 @@ def cli():
                 break
             elif choice_str.lower() == "f":
                 filter_term = click.prompt("Enter filter term", type=str)
-                hosts = [host for host in hosts if filter_term.lower() in host.lower()]
-                if not hosts:
-                    click.echo(
-                        click.style("No hosts found matching the filter.", fg="red")
-                    )
-                continue  # Restart the loop to display filtered hosts
+                continue
 
             choice = int(choice_str)
-            if 1 <= choice <= len(hosts):
-                selected_host = hosts[choice - 1]
+            if 1 <= choice <= len(selectable_hosts):
+                selected_host = selectable_hosts[choice - 1]
                 click.echo(
                     click.style(f"Connecting to {selected_host}...", fg="yellow")
                 )
