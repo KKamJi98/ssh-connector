@@ -67,7 +67,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.changelog.outputs.version }}
-          name: Release v${{ steps.changelog.outputs.version }}
+          name: v${{ steps.changelog.outputs.version }}
           body_path: CHANGELOG.md
           draft: false
           prerelease: false
