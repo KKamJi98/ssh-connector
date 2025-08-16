@@ -12,34 +12,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.13'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
 
-    - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    - name: Create virtual environment
-      run: uv venv
+      - name: Sync dev dependencies
+        run: uv sync --group dev
 
-    - name: Install dependencies
-      run: uv pip install -e ".[dev]"
+      - name: Lint with ruff
+        run: uv run --group dev ruff check --output-format=github .
 
-    - name: Lint with black and isort
-      run: |
-        source .venv/bin/activate
-        black --check .
-        isort --check-only .
+      - name: Format check with ruff
+        run: uv run --group dev ruff format --check .
 
-    - name: Test with pytest
-      run: |
-        source .venv/bin/activate
-        pytest
+      - name: Test with pytest
+        run: uv run --group dev pytest -q
 
   release-please:
     needs: build-and-test
