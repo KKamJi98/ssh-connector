@@ -1,7 +1,7 @@
-import os
 import re
 import subprocess
 from pathlib import Path
+from typing import Iterable, List, Set
 
 import click
 from rich import box
@@ -9,14 +9,85 @@ from rich.console import Console
 from rich.table import Table
 
 
-def get_ssh_hosts():
-    """
-    Parses the ~/.ssh/config file to extract hostnames.
+def _expand_include_patterns(patterns: Iterable[str], base_dir: Path) -> List[Path]:
+    """Expand Include patterns relative to base_dir, supporting ~ and globs.
 
-    Returns:
-        A list of hostnames, excluding any with wildcards.
+    Returns files sorted lexicographically to be deterministic.
     """
-    ssh_config_path = Path.home() / ".ssh" / "config"
+    import glob
+    import os
+
+    expanded: Set[Path] = set()
+    for pat in patterns:
+        pat = os.path.expanduser(pat)
+        pat_path = Path(pat)
+        if not pat_path.is_absolute():
+            pat_path = base_dir / pat
+        # Use glob with recursive patterns
+        matches = [Path(p) for p in glob.glob(str(pat_path), recursive=True)]
+        for m in matches:
+            if m.is_file():
+                expanded.add(m)
+    return sorted(expanded)
+
+
+def _parse_config_file(path: Path, visited: Set[Path]) -> List[str]:
+    """Parse a single ssh config file, following Include directives recursively.
+
+    - Collects Host values (excluding wildcard patterns with '*').
+    - Follows Include directives relative to current file directory.
+    - Avoids cycles via visited set.
+    """
+    hosts: List[str] = []
+    include_patterns: list[list[str]] = []
+    try:
+        real_path = path.resolve()
+        if real_path in visited:
+            return []
+        visited.add(real_path)
+        if not real_path.is_file():
+            return []
+
+        base_dir = real_path.parent
+        with open(real_path, "r") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                # Include directive
+                if re.match(r"^Include\b", line, re.IGNORECASE):
+                    # Record include patterns; defer processing until after local hosts
+                    parts = line.split()[1:]
+                    if parts:
+                        include_patterns.append(parts)
+                    continue
+                # Host directive
+                if re.match(r"^Host\b", line, re.IGNORECASE):
+                    host_values = line.split()[1:]
+                    for hv in host_values:
+                        if "*" not in hv:
+                            hosts.append(hv)
+        # After collecting local hosts, process includes in order
+        for parts in include_patterns:
+            include_files = _expand_include_patterns(parts, base_dir)
+            for inc in include_files:
+                hosts.extend(_parse_config_file(inc, visited))
+    except Exception as e:
+        click.echo(
+            click.style(f"Error reading or parsing SSH config file: {e}", fg="red")
+        )
+        return []
+    return hosts
+
+
+def get_ssh_hosts(config_path: Path | None = None) -> List[str]:
+    """Parse SSH config, following Include directives, and return host list.
+
+    - Default config path: ``~/.ssh/config``.
+    - Returns unique hosts preserving discovery order.
+    - Excludes wildcard host patterns.
+    """
+    ssh_config_path = config_path or (Path.home() / ".ssh" / "config")
     if not ssh_config_path.is_file():
         click.echo(
             click.style(
@@ -25,25 +96,10 @@ def get_ssh_hosts():
         )
         return []
 
-    hosts = []
-    try:
-        with open(ssh_config_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if re.match(r"^\s*Host\s+", line, re.IGNORECASE):
-                    # Extract host value, stripping "Host " prefix
-                    host_values = line.split()[1:]
-                    for host in host_values:
-                        # Exclude wildcard hosts
-                        if "*" not in host:
-                            hosts.append(host)
-    except Exception as e:
-        click.echo(
-            click.style(f"Error reading or parsing SSH config file: {e}", fg="red")
-        )
-        return []
-
-    return list(dict.fromkeys(hosts))  # Return unique hosts in order of appearance
+    visited: Set[Path] = set()
+    hosts = _parse_config_file(ssh_config_path, visited)
+    # Deduplicate while preserving order
+    return list(dict.fromkeys(hosts))
 
 
 @click.command()
@@ -51,8 +107,6 @@ def cli():
     """
     A CLI tool to list hosts from ~/.ssh/config and connect to them.
     """
-    hosts = get_ssh_hosts()
-
     all_available_hosts = get_ssh_hosts()
     if not all_available_hosts:
         click.echo("No valid SSH hosts found.")
@@ -62,9 +116,7 @@ def cli():
     filter_term = ""  # Initialize filter_term
 
     while True:
-        selectable_hosts = (
-            []
-        )  # Initialize selectable_hosts at the beginning of each loop iteration
+        selectable_hosts = []  # Initialize selectable_hosts at the beginning of each loop iteration
         current_display_index = 1  # Initialize current_display_index here as well
         table = Table(
             title="[bold cyan]SSH Hosts[/bold cyan]",
@@ -144,7 +196,7 @@ def cli():
                             fg="red",
                         )
                     )
-                except subprocess.CalledProcessError as e:
+                except subprocess.CalledProcessError:
                     click.echo(
                         click.style(
                             f"SSH session for {selected_host} ended.", fg="blue"
