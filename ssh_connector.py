@@ -1,7 +1,7 @@
 import re
 import subprocess
 from pathlib import Path
-from typing import Iterable, List, Set
+from typing import Dict, Iterable, List, Set, Tuple
 
 import click
 from rich import box
@@ -31,14 +31,14 @@ def _expand_include_patterns(patterns: Iterable[str], base_dir: Path) -> List[Pa
     return sorted(expanded)
 
 
-def _parse_config_file(path: Path, visited: Set[Path]) -> List[str]:
+def _parse_config_file(path: Path, visited: Set[Path]) -> List[Tuple[str, Path]]:
     """Parse a single ssh config file, following Include directives recursively.
 
     - Collects Host values (excluding wildcard patterns with '*').
     - Follows Include directives relative to current file directory.
     - Avoids cycles via visited set.
     """
-    hosts: List[str] = []
+    hosts: List[Tuple[str, Path]] = []
     include_patterns: list[list[str]] = []
     try:
         real_path = path.resolve()
@@ -66,7 +66,7 @@ def _parse_config_file(path: Path, visited: Set[Path]) -> List[str]:
                     host_values = line.split()[1:]
                     for hv in host_values:
                         if "*" not in hv:
-                            hosts.append(hv)
+                            hosts.append((hv, real_path))
         # After collecting local hosts, process includes in order
         for parts in include_patterns:
             include_files = _expand_include_patterns(parts, base_dir)
@@ -97,9 +97,43 @@ def get_ssh_hosts(config_path: Path | None = None) -> List[str]:
         return []
 
     visited: Set[Path] = set()
-    hosts = _parse_config_file(ssh_config_path, visited)
-    # Deduplicate while preserving order
-    return list(dict.fromkeys(hosts))
+    entries = _parse_config_file(ssh_config_path, visited)
+    # Deduplicate host names while preserving order
+    ordered_unique: Dict[str, None] = {}
+    for host, _src in entries:
+        if host not in ordered_unique:
+            ordered_unique[host] = None
+    return list(ordered_unique.keys())
+
+
+def get_ssh_hosts_grouped(
+    config_path: Path | None = None,
+) -> Tuple[Dict[str, List[str]], List[str]]:
+    """Return hosts grouped by their source file.
+
+    - "Default" group corresponds to hosts defined in the main config file.
+    - Included files are grouped by their filename (Path.name).
+    - Returns a tuple of (grouped_hosts, group_order).
+    """
+    ssh_config_path = config_path or (Path.home() / ".ssh" / "config")
+    if not ssh_config_path.is_file():
+        return {}, []
+
+    visited: Set[Path] = set()
+    entries = _parse_config_file(ssh_config_path, visited)
+
+    grouped: Dict[str, List[str]] = {}
+    group_order: List[str] = []
+    for host, src in entries:
+        group = "Default" if src == ssh_config_path.resolve() else src.name
+        if group not in grouped:
+            grouped[group] = []
+            group_order.append(group)
+        # Deduplicate within a group while preserving order
+        if host not in grouped[group]:
+            grouped[group].append(host)
+
+    return grouped, group_order
 
 
 @click.command()
@@ -107,7 +141,8 @@ def cli():
     """
     A CLI tool to list hosts from ~/.ssh/config and connect to them.
     """
-    all_available_hosts = get_ssh_hosts()
+    grouped, group_order = get_ssh_hosts_grouped()
+    all_available_hosts = [h for g in group_order for h in grouped.get(g, [])]
     if not all_available_hosts:
         click.echo("No valid SSH hosts found.")
         return
@@ -116,56 +151,60 @@ def cli():
     filter_term = ""  # Initialize filter_term
 
     while True:
-        selectable_hosts = []  # Initialize selectable_hosts at the beginning of each loop iteration
-        current_display_index = 1  # Initialize current_display_index here as well
-        table = Table(
-            title="[bold cyan]SSH Hosts[/bold cyan]",
-            box=box.DOUBLE_EDGE,
-            border_style="cyan",
-        )
-        table.add_column("No.", style="cyan", no_wrap=True)
-        table.add_column("Host", style="magenta")
+        selectable_hosts: List[str] = []
+        current_display_index = 1
 
-        # Apply filter if present
-        if filter_term:
-            current_display_hosts = [
-                host
-                for host in all_available_hosts
-                if filter_term.lower() in host.lower()
-            ]
-        else:
-            current_display_hosts = all_available_hosts
+        # Build a filtered view of groups → hosts
+        def filter_hosts(hosts: List[str]) -> List[str]:
+            if not filter_term:
+                return hosts
+            ft = filter_term.lower()
+            return [h for h in hosts if ft in h.lower()]
 
-        if not current_display_hosts:
-            click.echo(click.style("No hosts found matching the filter.", fg="red"))
-            filter_term = ""  # Reset filter if no matches
-            continue
+        any_host_displayed = False
+        for group in group_order:
+            hosts_in_group = grouped.get(group, [])
+            hosts_in_group = filter_hosts(hosts_in_group)
+            if not hosts_in_group:
+                continue
 
-        normal_hosts = [
-            host for host in current_display_hosts if "jump" not in host.lower()
-        ]
-        jump_hosts = [host for host in current_display_hosts if "jump" in host.lower()]
+            any_host_displayed = True
+            # Split into normal vs jump for this group
+            normal_hosts = [h for h in hosts_in_group if "jump" not in h.lower()]
+            jump_hosts = [h for h in hosts_in_group if "jump" in h.lower()]
 
-        for host in normal_hosts:
-            selectable_hosts.append(host)
-            table.add_row(str(current_display_index), host)
-            current_display_index += 1
-
-        console.print(table)
-
-        if jump_hosts:
-            jump_table = Table(
-                title="[bold yellow]JUMP-HOSTS[/bold yellow]",
+            table = Table(
+                title=f"[bold cyan]{group}[/bold cyan]",
                 box=box.DOUBLE_EDGE,
-                border_style="yellow",
+                border_style="cyan",
             )
-            jump_table.add_column("No.", style="cyan", no_wrap=True)
-            jump_table.add_column("Host", style="magenta")
-            for host in jump_hosts:
+            table.add_column("No.", style="cyan", no_wrap=True)
+            table.add_column("Host", style="magenta")
+
+            for host in normal_hosts:
                 selectable_hosts.append(host)
-                jump_table.add_row(str(current_display_index), host)
+                table.add_row(str(current_display_index), host)
                 current_display_index += 1
-            console.print(jump_table)
+            console.print(table)
+
+            if jump_hosts:
+                jump_table = Table(
+                    title=f"[bold yellow]{group} — JUMP-HOSTS[/bold yellow]",
+                    box=box.DOUBLE_EDGE,
+                    border_style="yellow",
+                )
+                jump_table.add_column("No.", style="cyan", no_wrap=True)
+                jump_table.add_column("Host", style="magenta")
+                for host in jump_hosts:
+                    selectable_hosts.append(host)
+                    jump_table.add_row(str(current_display_index), host)
+                    current_display_index += 1
+                console.print(jump_table)
+
+        if not any_host_displayed:
+            click.echo(click.style("No hosts found matching the filter.", fg="red"))
+            filter_term = ""
+            continue
 
         try:
             choice_str = click.prompt(
