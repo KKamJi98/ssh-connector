@@ -1,12 +1,14 @@
 # SSH Connector
 
+[![CI](https://github.com/KKamJi98/ssh-connector/actions/workflows/ci.yml/badge.svg)](https://github.com/KKamJi98/ssh-connector/actions/workflows/ci.yml)
+
 A CLI tool to simplify SSH connections by providing an interactive menu of hosts from your `~/.ssh/config` file.
 
 ### Example
 
 Let's assume your `~/.ssh/config` file contains the following entries:
 
-```
+```text
 Host dev-app-1
     Hostname 192.168.1.10
     User devuser
@@ -50,7 +52,7 @@ Host jump-prod
 
 When you run `ssh-connector`, you will see an interactive menu like this:
 
-```
+```text
       SSH Hosts
 ╔═════╤═════════════╗
 ║ No. │ Host        ║
@@ -88,12 +90,6 @@ After selecting a host (e.g., `prod-app-1`), the tool will execute the appropria
 - Python 3.13+
 - `uv` (recommended)
 
-### Using pip
-
-```bash
-pip install .
-```
-
 ### Using uv
 
 ```bash
@@ -120,26 +116,36 @@ This will display a list of your configured SSH hosts. You can then select a hos
    cd ssh-connector
    ```
 
-2. Create a virtual environment and install dependencies:
+2. Sync dev dependencies with uv:
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   uv pip install -e ".[dev]"
+   uv sync --group dev
    ```
 
 ### Running Tests
 
-This project uses `pytest` for testing. To run the tests, use the following command:
+Run tests via uv:
 
 ```bash
-pytest
+uv run --group dev pytest -q
 ```
 
 ### Formatting
 
-This project uses `black` and `isort` for code formatting. To format the code, run:
+This project uses `ruff` for linting and formatting.
 
 ```bash
-black .
-isort .
+# Lint
+uv run --group dev ruff check .
+
+# Format in-place
+uv run --group dev ruff format
+
+# Format check (CI-style)
+uv run --group dev ruff format --check .
 ```
+
+### Commit Messages
+
+This repository uses Conventional Commits and release-please.
+Use `<type>: <summary>` in English without scopes/emojis.
+See `AGENTS.md` for details.
