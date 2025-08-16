@@ -162,19 +162,28 @@ def cli():
             return [h for h in hosts if ft in h.lower()]
 
         any_host_displayed = False
+
+        # First pass: render non-jump hosts per group
+        aggregated_jump: List[Tuple[str, str]] = []  # (host, group)
         for group in group_order:
             hosts_in_group = grouped.get(group, [])
             hosts_in_group = filter_hosts(hosts_in_group)
             if not hosts_in_group:
                 continue
 
-            any_host_displayed = True
-            # Split into normal vs jump for this group
+            # Split
             normal_hosts = [h for h in hosts_in_group if "jump" not in h.lower()]
             jump_hosts = [h for h in hosts_in_group if "jump" in h.lower()]
 
+            # Queue jump hosts for the final section
+            aggregated_jump.extend((h, group) for h in jump_hosts)
+
+            if not normal_hosts:
+                continue
+
+            any_host_displayed = True
             table = Table(
-                title=f"[bold cyan]{group}[/bold cyan]",
+                title=f"[bold cyan]{group} ({len(normal_hosts)})[/bold cyan]",
                 box=box.DOUBLE_EDGE,
                 border_style="cyan",
             )
@@ -187,19 +196,22 @@ def cli():
                 current_display_index += 1
             console.print(table)
 
-            if jump_hosts:
-                jump_table = Table(
-                    title=f"[bold yellow]{group} — JUMP-HOSTS[/bold yellow]",
-                    box=box.DOUBLE_EDGE,
-                    border_style="yellow",
-                )
-                jump_table.add_column("No.", style="cyan", no_wrap=True)
-                jump_table.add_column("Host", style="magenta")
-                for host in jump_hosts:
-                    selectable_hosts.append(host)
-                    jump_table.add_row(str(current_display_index), host)
-                    current_display_index += 1
-                console.print(jump_table)
+        # Second pass: render all jump hosts at the bottom, with group shown
+        if aggregated_jump:
+            any_host_displayed = True
+            jump_table = Table(
+                title=f"[bold yellow]JUMP-HOSTS ({len(aggregated_jump)})[/bold yellow]",
+                box=box.DOUBLE_EDGE,
+                border_style="yellow",
+            )
+            jump_table.add_column("No.", style="cyan", no_wrap=True)
+            jump_table.add_column("Host", style="magenta")
+            jump_table.add_column("Group", style="green")
+            for host, group in aggregated_jump:
+                selectable_hosts.append(host)
+                jump_table.add_row(str(current_display_index), host, group)
+                current_display_index += 1
+            console.print(jump_table)
 
         if not any_host_displayed:
             click.echo(click.style("No hosts found matching the filter.", fg="red"))
