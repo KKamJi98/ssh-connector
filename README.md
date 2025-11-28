@@ -81,7 +81,7 @@ After selecting a host (e.g., `prod-app-1`), the tool will execute the appropria
 
 - Lists all hosts defined in your `~/.ssh/config`, follows `Include` directives (e.g., `Include ~/.ssh/config.d/*`), and groups entries by source file (`Default` for the main config).
 - Automatically separates hostnames containing `jump` (case-insensitive) into a dedicated "JUMP-HOSTS" table at the bottom with their source group.
-- Ignores hosts whose names end with `-abort` (case-insensitive) so they do not appear in the menu.
+- Ignores hosts whose names end with `-abort` or `-ignore`, or contain `github`/`bitbucket` (case-insensitive) so they do not appear in the menu.
 - Allows you to filter and select a host to connect to.
 - Automatically connects to the selected host using the `ssh` command.
 
@@ -139,7 +139,7 @@ Host base
 
 - Hosts are grouped by the file they come from (`Default` for `~/.ssh/config`, and the filename for included configs).
 - Any host name containing `jump` (case-insensitive) is collected into a final "JUMP-HOSTS" section, with its source group shown in a separate column.
-- Hosts whose names end with `-abort` are filtered out entirely.
+- Hosts whose names end with `-abort` or `-ignore`, or contain `github`/`bitbucket`, are filtered out entirely.
 - Press `f` to filter by substring (case-insensitive) before selecting a host.
 
 ## Development
