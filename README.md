@@ -79,22 +79,40 @@ After selecting a host (e.g., `prod-app-1`), the tool will execute the appropria
 
 ## Features
 
-- Lists all hosts defined in your `~/.ssh/config` and follows `Include` directives (e.g., `Include ~/.ssh/config.d/*`).
+- Lists all hosts defined in your `~/.ssh/config`, follows `Include` directives (e.g., `Include ~/.ssh/config.d/*`), and groups entries by source file (`Default` for the main config).
+- Automatically separates hostnames containing `jump` (case-insensitive) into a dedicated "JUMP-HOSTS" table at the bottom with their source group.
+- Ignores hosts whose names end with `-abort` (case-insensitive) so they do not appear in the menu.
 - Allows you to filter and select a host to connect to.
 - Automatically connects to the selected host using the `ssh` command.
-- Groups hosts by the source file (main config shown as `Default`) and renders `jump` hosts together at the bottom with their originating group.
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.13+
-- `uv` (recommended)
+- `uv` (recommended) or `pipx`
 
-### Using uv
+### Recommended: uv tool (global shim)
+
+Creates an isolated environment and installs a shim (usually in `~/.local/bin`) so you can run `ssh-connector` from any directory. Ensure that directory is on your `PATH`.
 
 ```bash
-uv pip install .
+uv tool install .
+ssh-connector --help
+```
+
+### Alternative: uv pip (user install)
+
+```bash
+uv pip install . --user
+ssh-connector --help
+```
+
+### Alternative: pipx
+
+```bash
+pipx install .
+ssh-connector --help
 ```
 
 ## Usage
@@ -107,7 +125,7 @@ ssh-connector
 
 This will display a list of your configured SSH hosts. You can then select a host to connect to.
 
-### How hosts are discovered
+### How hosts are discovered and displayed
 
 - The tool reads `~/.ssh/config` and follows any `Include` directives it finds (globs are supported).
 - If you want to split entries into `~/.ssh/config.d/`, ensure your main config includes them, for example:
@@ -119,7 +137,10 @@ Host base
     HostName 192.168.0.10
 ```
 
-- Hosts are grouped by their source file name when displayed; entries from the main config appear under `Default`. Hostnames containing `jump` (case-insensitive) are also shown in a dedicated `JUMP-HOSTS` section with their source group.
+- Hosts are grouped by the file they come from (`Default` for `~/.ssh/config`, and the filename for included configs).
+- Any host name containing `jump` (case-insensitive) is collected into a final "JUMP-HOSTS" section, with its source group shown in a separate column.
+- Hosts whose names end with `-abort` are filtered out entirely.
+- Press `f` to filter by substring (case-insensitive) before selecting a host.
 
 ## Development
 

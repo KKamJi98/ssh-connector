@@ -9,6 +9,12 @@ from rich.console import Console
 from rich.table import Table
 
 
+def _is_ignored_host(host: str) -> bool:
+    """Return True if host should be skipped from display/selection."""
+
+    return host.lower().endswith("-abort")
+
+
 def _expand_include_patterns(patterns: Iterable[str], base_dir: Path) -> List[Path]:
     """Expand Include patterns relative to base_dir, supporting ~ and globs.
 
@@ -101,6 +107,8 @@ def get_ssh_hosts(config_path: Path | None = None) -> List[str]:
     # Deduplicate host names while preserving order
     ordered_unique: Dict[str, None] = {}
     for host, _src in entries:
+        if _is_ignored_host(host):
+            continue
         if host not in ordered_unique:
             ordered_unique[host] = None
     return list(ordered_unique.keys())
@@ -125,6 +133,8 @@ def get_ssh_hosts_grouped(
     grouped: Dict[str, List[str]] = {}
     group_order: List[str] = []
     for host, src in entries:
+        if _is_ignored_host(host):
+            continue
         group = "Default" if src == ssh_config_path.resolve() else src.name
         if group not in grouped:
             grouped[group] = []

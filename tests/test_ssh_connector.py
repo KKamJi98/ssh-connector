@@ -43,6 +43,17 @@ def test_get_ssh_hosts_with_empty_config(mock_ssh_config_file):
     assert hosts == []
 
 
+def test_get_ssh_hosts_excludes_abort_suffix(mock_ssh_config_file):
+    config_content = """
+    Host server1-abort
+    Host server2
+    Host server3-abort
+    """
+    mock_ssh_config_file(config_content)
+    hosts = get_ssh_hosts()
+    assert hosts == ["server2"]
+
+
 def test_get_ssh_hosts_with_include(tmp_path: Path):
     # Create directory structure
     ssh_dir = tmp_path / ".ssh"
