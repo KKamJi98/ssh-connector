@@ -115,6 +115,15 @@ pipx install .
 ssh-connector --help
 ```
 
+### Updating after local changes
+
+If you modify the code locally and want the `ssh-connector` shim to reflect those changes, reinstall it:
+
+```bash
+uv tool install --reinstall --no-cache .
+ssh-connector --help
+```
+
 ## Usage
 
 Simply run the following command in your terminal:
