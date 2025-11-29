@@ -79,9 +79,10 @@ After selecting a host (e.g., `prod-app-1`), the tool will execute the appropria
 
 ## Features
 
-- Lists all hosts defined in your `~/.ssh/config`.
+- Lists all hosts defined in your `~/.ssh/config` and follows `Include` directives (e.g., `Include ~/.ssh/config.d/*`).
 - Allows you to filter and select a host to connect to.
 - Automatically connects to the selected host using the `ssh` command.
+- Groups hosts by the source file (main config shown as `Default`) and renders `jump` hosts together at the bottom with their originating group.
 
 ## Installation
 
@@ -105,6 +106,20 @@ ssh-connector
 ```
 
 This will display a list of your configured SSH hosts. You can then select a host to connect to.
+
+### How hosts are discovered
+
+- The tool reads `~/.ssh/config` and follows any `Include` directives it finds (globs are supported).
+- If you want to split entries into `~/.ssh/config.d/`, ensure your main config includes them, for example:
+
+```text
+Include ~/.ssh/config.d/*
+
+Host base
+    HostName 192.168.0.10
+```
+
+- Hosts are grouped by their source file name when displayed; entries from the main config appear under `Default`. Hostnames containing `jump` (case-insensitive) are also shown in a dedicated `JUMP-HOSTS` section with their source group.
 
 ## Development
 
