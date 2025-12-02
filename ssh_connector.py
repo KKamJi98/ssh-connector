@@ -13,11 +13,7 @@ def _is_ignored_host(host: str) -> bool:
     """Return True if host should be skipped from display/selection."""
 
     lowered = host.lower()
-    return (
-        lowered.endswith("-ignore")
-        or "github" in lowered
-        or "bitbucket" in lowered
-    )
+    return lowered.endswith("-ignore") or "github" in lowered or "bitbucket" in lowered
 
 
 def _expand_include_patterns(patterns: Iterable[str], base_dir: Path) -> List[Path]:
