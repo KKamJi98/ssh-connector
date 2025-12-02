@@ -1,7 +1,7 @@
 
 [project]
 name = "ssh-connector"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   { name="TaeJi-Kim", email="rlaxowl5460@gmail.com" },
 ]
