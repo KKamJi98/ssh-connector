@@ -120,7 +120,7 @@ def get_ssh_hosts_grouped(
 ) -> Tuple[Dict[str, List[str]], List[str]]:
     """Return hosts grouped by their source file.
 
-    - "Default" group corresponds to hosts defined in the main config file.
+    - "Main" group corresponds to hosts defined in the main config file.
     - Included files are grouped by their filename (Path.name).
     - Returns a tuple of (grouped_hosts, group_order).
     """
@@ -136,7 +136,7 @@ def get_ssh_hosts_grouped(
     for host, src in entries:
         if _is_ignored_host(host):
             continue
-        group = "Default" if src == ssh_config_path.resolve() else src.name
+        group = "Main" if src == ssh_config_path.resolve() else src.name
         if group not in grouped:
             grouped[group] = []
             group_order.append(group)
