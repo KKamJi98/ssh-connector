@@ -231,7 +231,7 @@ def cli():
 
         try:
             choice_str = click.prompt(
-                "Enter the number of the host to connect to (or 'q' to quit, 'f' to filter)",
+                "Enter the number or name of the host to connect to (or 'q' to quit, 'f' to filter)",
                 type=str,
             )
 
@@ -242,35 +242,42 @@ def cli():
                 filter_term = click.prompt("Enter filter term", type=str)
                 continue
 
-            choice = int(choice_str)
-            if 1 <= choice <= len(selectable_hosts):
-                selected_host = selectable_hosts[choice - 1]
-                click.echo(
-                    click.style(f"Connecting to {selected_host}...", fg="yellow")
-                )
-
-                try:
-                    subprocess.run(["ssh", selected_host], check=True)
-                except FileNotFoundError:
-                    click.echo(
-                        click.style(
-                            "Error: 'ssh' command not found. Is OpenSSH client installed and in your PATH?",
-                            fg="red",
-                        )
-                    )
-                except subprocess.CalledProcessError:
-                    click.echo(
-                        click.style(
-                            f"SSH session for {selected_host} ended.", fg="blue"
-                        )
-                    )
-                break
+            # Try matching by host name first
+            matched_hosts = [
+                h for h in selectable_hosts if h.lower() == choice_str.lower()
+            ]
+            if matched_hosts:
+                selected_host = matched_hosts[0]
             else:
-                click.echo(click.style("Invalid number. Please try again.", fg="red"))
+                choice = int(choice_str)
+                if not (1 <= choice <= len(selectable_hosts)):
+                    click.echo(
+                        click.style("Invalid number. Please try again.", fg="red")
+                    )
+                    continue
+                selected_host = selectable_hosts[choice - 1]
+
+            click.echo(click.style(f"Connecting to {selected_host}...", fg="yellow"))
+
+            try:
+                subprocess.run(["ssh", selected_host], check=True)
+            except FileNotFoundError:
+                click.echo(
+                    click.style(
+                        "Error: 'ssh' command not found. Is OpenSSH client installed and in your PATH?",
+                        fg="red",
+                    )
+                )
+            except subprocess.CalledProcessError:
+                click.echo(
+                    click.style(f"SSH session for {selected_host} ended.", fg="blue")
+                )
+            break
         except ValueError:
             click.echo(
                 click.style(
-                    "Invalid input. Please enter a number, 'q', or 'f'.", fg="red"
+                    "Invalid input. Please enter a number, host name, 'q', or 'f'.",
+                    fg="red",
                 )
             )
         except (EOFError, KeyboardInterrupt):
