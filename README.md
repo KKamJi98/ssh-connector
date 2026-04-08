@@ -72,17 +72,17 @@ When you run `ssh-connector`, you will see an interactive menu like this:
 ║ 8   │ jump-stg    ║
 ║ 9   │ jump-prod   ║
 ╚═════╧═════════════╝
-Enter the number of the host to connect to (or 'q' to quit, 'f' to filter):
+Enter the number or name of the host to connect to (or 'q' to quit, 'f' to filter):
 ```
 
-After selecting a host (e.g., `prod-app-1`), the tool will execute the appropriate SSH command, handling `ProxyJump` automatically if configured.
+You can select a host by entering its number (e.g., `5`) or name (e.g., `prod-app-1`). The tool will execute the appropriate SSH command, handling `ProxyJump` automatically if configured.
 
 ## Features
 
 - Lists all hosts defined in your `~/.ssh/config`, follows `Include` directives (e.g., `Include ~/.ssh/config.d/*`), and groups entries by source file (`Main` for the main config).
 - Automatically separates hostnames containing `jump` (case-insensitive) into a dedicated "JUMP-HOSTS" table at the bottom with their source group.
 - Ignores hosts whose names end with `-abort` or `-ignore`, or contain `github`/`bitbucket` (case-insensitive) so they do not appear in the menu.
-- Allows you to filter and select a host to connect to.
+- Allows you to select a host by number or name (case-insensitive) and filter by substring.
 - Automatically connects to the selected host using the `ssh` command.
 
 ## Installation
@@ -115,13 +115,20 @@ pipx install .
 ssh-connector --help
 ```
 
-### Updating after local changes
+### Development: editable install
 
-If you modify the code locally and want the `ssh-connector` shim to reflect those changes, reinstall it:
+If you are actively developing, install in editable mode so code changes are reflected immediately without reinstalling:
+
+```bash
+uv tool install -e .
+```
+
+### Updating after local changes (non-editable)
+
+If you installed without `-e` and want the `ssh-connector` shim to reflect code changes, reinstall it:
 
 ```bash
 uv tool install --reinstall --no-cache .
-ssh-connector --help
 ```
 
 ## Usage
@@ -132,7 +139,7 @@ Simply run the following command in your terminal:
 ssh-connector
 ```
 
-This will display a list of your configured SSH hosts. You can then select a host to connect to.
+This will display a list of your configured SSH hosts. Enter a host number or name to connect.
 
 ### How hosts are discovered and displayed
 
@@ -149,6 +156,7 @@ Host base
 - Hosts are grouped by the file they come from (`Main` for `~/.ssh/config`, and the filename for included configs).
 - Any host name containing `jump` (case-insensitive) is collected into a final "JUMP-HOSTS" section, with its source group shown in a separate column.
 - Hosts whose names end with `-abort` or `-ignore`, or contain `github`/`bitbucket`, are filtered out entirely.
+- You can type a host name directly (case-insensitive) instead of its number to connect.
 - Press `f` to filter by substring (case-insensitive) before selecting a host.
 
 ## Development
