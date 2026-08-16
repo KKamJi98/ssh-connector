@@ -1,10 +1,21 @@
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.0](https://github.com/KKamJi98/ssh-connector/compare/v0.2.0...v0.3.0) (2026-08-16)
+
+
+### Features
+
+* **ci:** create the GitHub release alongside the PyPI upload ([34426ee](https://github.com/KKamJi98/ssh-connector/commit/34426ee6a0d6a0518cc5184ae9ed7f45c210e632))
+
+
+### Bug Fixes
+
+* **ci:** drive the release from release-please, not a tag trigger ([13ce885](https://github.com/KKamJi98/ssh-connector/commit/13ce8854b0b2b166f97e8e94b933bba500c96964))
 
 ## [0.2.0] - 2026-08-16
 
