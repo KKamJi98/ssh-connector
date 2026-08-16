@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-08-16
+
+### Added
+- Select a host by name as well as by number.
+- Show all jump hosts at the bottom under their own group column.
+- Ignore hosts whose names carry an abort suffix, and widen the ignore list.
+- Publish to PyPI on a version tag, through Trusted Publishing.
+
+### Changed
+- Rename the `Default` group label to `Main`.
+- Document how `Include` directives are handled.
+
 ## [0.1.1] - 2025-06-29
 
 ### Changed
