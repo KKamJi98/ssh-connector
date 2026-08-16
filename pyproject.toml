@@ -7,7 +7,8 @@ authors = [
 ]
 description = "A CLI tool to easily select and connect to SSH hosts from your config file."
 readme = "README.md"
-requires-python = ">=3.13.0"
+license = { text = "MIT" }
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -36,7 +37,7 @@ dev = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py313"
+target-version = "py310"
 
 [tool.ruff.lint]
 # 기본 규칙(E, F 등)을 사용합니다. 필요 시 프로젝트 진행 중 조정합니다.
