@@ -74,7 +74,6 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           release-type: python
-          package-name: ssh-connector
 
   # release-please tags the very commit this run is building, so a plain checkout
   # is already at the released code. Nothing reads the tag name into a ref.
