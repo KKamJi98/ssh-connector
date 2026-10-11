@@ -9,10 +9,15 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions: {}
+
 jobs:
   build-and-test:
     name: python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       # The two ends that can actually break: 3.10 is the floor requires-python
@@ -39,5 +44,4 @@ jobs:
         run: uv run --group dev pytest -q
 
   # Moved to release.yml, which owns the whole release path. Keeping it here
-  # would have split the release across two files, and the tag it produces was
-  # never going to reach release.yml's old `push: tags` trigger anyway.
+  # would have split the release across two files.
