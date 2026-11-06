@@ -274,3 +274,17 @@ What happened, where it differed from the plan:
   the shared directory (it also serves `awspick`) was left alone.
 - Mac: `uv tool uninstall ssh-connector` (was 0.3.1) after `brew install`
   and after `/opt/homebrew/bin/ssh-connector --version` printed 0.4.0.
+
+## Homebrew job hardening (2026-11-07)
+
+- The `homebrew` job runs in the `release` environment, like `crates-io`,
+  so `HOMEBREW_TAP_DEPLOY_KEY` can live as an environment secret that only
+  tag runs can read. Until Ethan adds the environment secret and removes the
+  repository secret, the job still sees the repository secret.
+- Checksums are read into variables before the formula is written. Before,
+  a missing `.sha256` file made the `$(...)` inside the heredoc fail without
+  stopping the script, and a formula with `sha256 ""` was pushed (reproduced
+  against a local bare tap).
+- The change check uses `git status --porcelain --untracked-files=all` and
+  refuses to commit anything but `Formula/ssh-connector.rb`. An empty
+  deploy key secret now fails the job with a clear message.
