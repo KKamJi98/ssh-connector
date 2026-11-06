@@ -1,5 +1,14 @@
 {
  "cases": {
+  "config-wildcards": {
+   "bug": "3.5",
+   "reason": "negated patterns ('!name') are not listed as hosts",
+   "expected": {
+    "stdout": "    Main (2)    \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 1   │ q?wild ║\n║ 2   │ neg    ║\n╚═════╧════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "filter-eof": {
    "bug": "3.3",
    "reason": "end of input quits like q (Exiting., exit 0); Ctrl-C exits 130 instead of Aborted! and 1",
