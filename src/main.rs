@@ -3,99 +3,56 @@ mod config;
 mod table;
 mod term;
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::engine::{ArgValueCompleter, CompletionCandidate};
+use std::ffi::OsStr;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::ExitCode;
 
-/// The command line. The Python version (click) had `--help` and nothing
-/// else: no `-h`, no `--version`, no positional arguments.
+/// A CLI tool to list hosts from ~/.ssh/config and connect to them.
 #[derive(Parser)]
-#[command(
-    name = "ssh-connector",
-    disable_help_flag = true,
-    disable_version_flag = true,
-    disable_help_subcommand = true
-)]
+#[command(name = "ssh-connector", version, disable_help_subcommand = true)]
 struct Cli {
-    #[arg(long = "help")]
-    help: bool,
+    /// Connect to QUERY if it is a host name; otherwise open the menu
+    /// filtered by it
+    #[arg(add = ArgValueCompleter::new(complete_host))]
+    query: Option<String>,
 
-    /// Collected only to report them the way click did.
-    #[arg(hide = true, num_args = 0..)]
-    extra: Vec<String>,
+    /// Print the host names, one per line, in menu order, and exit
+    #[arg(long)]
+    list: bool,
+
+    /// Read this ssh config instead of ~/.ssh/config (ssh gets it as -F too)
+    #[arg(short = 'F', long = "config", value_name = "FILE")]
+    config: Option<PathBuf>,
 }
 
-fn prog_name() -> String {
-    std::env::args_os()
-        .next()
-        .and_then(|a| {
-            std::path::Path::new(&a)
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-        })
-        // click on Windows saw the console script name; drop the suffix so
-        // usage lines read the same everywhere.
-        .map(|n| n.strip_suffix(".exe").map(str::to_string).unwrap_or(n))
-        .unwrap_or_else(|| "ssh-connector".to_string())
-}
-
-fn help_text(prog: &str) -> String {
-    format!(
-        "Usage: {prog} [OPTIONS]\n\n  A CLI tool to list hosts from ~/.ssh/config and connect to them.\n\nOptions:\n  --help  Show this message and exit.\n"
-    )
-}
-
-/// click's usage error: usage line, hint, blank line, message; exit 2.
-fn usage_error(prog: &str, message: &str) -> ExitCode {
-    let _ = write!(
-        std::io::stderr(),
-        "Usage: {prog} [OPTIONS]\nTry '{prog} --help' for help.\n\nError: {message}\n"
-    );
-    ExitCode::from(2)
+/// Shell completion for QUERY: the same names `--list` prints.
+fn complete_host(current: &OsStr) -> Vec<CompletionCandidate> {
+    let prefix = current.to_string_lossy().to_lowercase();
+    let Ok((groups, _)) = app::load(&app::Options::default()) else {
+        return Vec::new();
+    };
+    app::menu_order(&groups)
+        .into_iter()
+        .filter(|h| h.to_lowercase().starts_with(&prefix))
+        .map(CompletionCandidate::new)
+        .collect()
 }
 
 fn main() -> ExitCode {
-    let prog = prog_name();
-    let cli = match Cli::try_parse() {
-        Ok(c) => c,
-        Err(e) => {
-            use clap::error::{ContextKind, ContextValue, ErrorKind};
-            let arg = match e.get(ContextKind::InvalidArg) {
-                Some(ContextValue::String(s)) => s.clone(),
-                _ => String::new(),
-            };
-            let arg = arg.split('=').next().unwrap_or_default().to_string();
-            let message = match e.kind() {
-                ErrorKind::UnknownArgument if !arg.is_empty() => format!("No such option '{arg}'."),
-                _ => e
-                    .to_string()
-                    .trim_start_matches("error: ")
-                    .lines()
-                    .next()
-                    .unwrap_or_default()
-                    .to_string(),
-            };
-            return usage_error(&prog, &message);
-        }
+    // `COMPLETE=<shell> ssh-connector` prints the shell's completion script;
+    // the script calls back with COMPLETE set to get the candidates.
+    clap_complete::CompleteEnv::with_factory(Cli::command).complete();
+
+    let cli = Cli::parse();
+    let options = app::Options {
+        query: cli.query,
+        config: cli.config,
     };
-    if cli.help {
-        let mut out = std::io::stdout();
-        if out
-            .write_all(help_text(&prog).as_bytes())
-            .and_then(|_| out.flush())
-            .is_err()
-        {
-            return ExitCode::from(1);
-        }
-        return ExitCode::SUCCESS;
-    }
-    if !cli.extra.is_empty() {
-        let (noun, list) = if cli.extra.len() == 1 {
-            ("argument", cli.extra[0].clone())
-        } else {
-            ("arguments", cli.extra.join(" "))
-        };
-        return usage_error(&prog, &format!("Got unexpected extra {noun} ({list})"));
+    if cli.list {
+        return ExitCode::from(app::list(&options) as u8);
     }
 
     std::panic::set_hook(Box::new(|info| {
@@ -103,7 +60,7 @@ fn main() -> ExitCode {
     }));
     app::install_interrupt_handler();
     let term = term::Term::detect();
-    let result = std::panic::catch_unwind(|| app::run(&term));
+    let result = std::panic::catch_unwind(|| app::run(&term, &options));
     let code = match result {
         Ok(Ok(code)) => code,
         Ok(Err(app::Exit(code))) => code,

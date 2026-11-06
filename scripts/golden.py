@@ -352,7 +352,16 @@ def run_case(binary: str, c: dict, fake_ssh: Path) -> dict:
         out, err = p.stdout.decode(), p.stderr.decode()
         for h in sorted({str(home), str(home.resolve())}, key=len, reverse=True):
             out, err = out.replace(h, "<HOME>"), err.replace(h, "<HOME>")
+        # `--version` prints the crate version; keep fixtures version-free.
+        ver = f"ssh-connector {crate_version()}\n"
+        out, err = out.replace(ver, "ssh-connector <VERSION>\n"), err.replace(ver, "ssh-connector <VERSION>\n")
         return {"stdout": out, "stderr": err, "code": p.returncode}
+
+
+def crate_version() -> str:
+    import tomllib
+
+    return tomllib.loads((ROOT / "Cargo.toml").read_text())["package"]["version"]
 
 
 def fake_ssh_path() -> Path:

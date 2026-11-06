@@ -158,14 +158,82 @@ fn host_table(
     .render(term)
 }
 
+/// What the command line asked for.
+#[derive(Debug, Default)]
+pub struct Options {
+    /// Connect straight to this host if it names exactly one, otherwise open
+    /// the menu filtered by it.
+    pub query: Option<String>,
+    /// An ssh config to read instead of `~/.ssh/config`; ssh gets it as `-F`.
+    pub config: Option<std::path::PathBuf>,
+}
+
+/// The hosts in the order the menu numbers them: each group's hosts without
+/// "jump" in their name, then every jump host. Each name appears once.
+pub fn menu_order(groups: &Groups) -> Vec<String> {
+    let is_jump = |h: &String| h.to_lowercase().contains("jump");
+    let normal = groups
+        .iter()
+        .flat_map(|(_, hosts)| hosts.iter().filter(|h| !is_jump(h)));
+    let jumps = groups
+        .iter()
+        .flat_map(|(_, hosts)| hosts.iter().filter(|h| is_jump(h)));
+    let mut seen = std::collections::HashSet::new();
+    normal
+        .chain(jumps)
+        .filter(|h| seen.insert(h.as_str()))
+        .cloned()
+        .collect()
+}
+
+/// Read the config the options point at. `Err` is a message for stderr.
+pub fn load(options: &Options) -> Result<(Groups, Vec<String>), String> {
+    let Some(user_dir) = config::user_dir() else {
+        return Ok((Groups::default(), Vec::new()));
+    };
+    match &options.config {
+        Some(path) if !path.is_file() => Err(format!(
+            "Error: SSH config file not found at {}",
+            path.display()
+        )),
+        Some(path) => Ok(config::grouped_hosts(path, &user_dir)),
+        None => Ok(config::grouped_hosts(&user_dir.join("config"), &user_dir)),
+    }
+}
+
+/// `--list`: host names one per line, in menu order, filtered by the query.
+pub fn list(options: &Options) -> i32 {
+    let (groups, errors) = match load(options) {
+        Ok(g) => g,
+        Err(message) => {
+            eprintln!("{message}");
+            return 1;
+        }
+    };
+    for e in &errors {
+        eprintln!("{e}");
+    }
+    let q = options.query.as_deref().unwrap_or("").to_lowercase();
+    let mut out = io::stdout().lock();
+    for h in menu_order(&groups) {
+        if (q.is_empty() || h.to_lowercase().contains(&q)) && writeln!(out, "{h}").is_err() {
+            return 1;
+        }
+    }
+    0
+}
+
 /// Run the menu. Returns the process exit code.
-pub fn run(term: &Term) -> Res<i32> {
+pub fn run(term: &Term, options: &Options) -> Res<i32> {
     let stdout: io::StdoutLock<'static> = io::stdout().lock();
     let mut out = Out { term, w: stdout };
 
-    let (groups, errors) = match config::user_dir() {
-        Some(dir) => config::grouped_hosts(&dir.join("config"), &dir),
-        None => (Groups::default(), Vec::new()),
+    let (groups, errors) = match load(options) {
+        Ok(g) => g,
+        Err(message) => {
+            eprintln!("{message}");
+            return Ok(1);
+        }
     };
     for e in &errors {
         out.click(e, Color::Red)?;
@@ -175,7 +243,19 @@ pub fn run(term: &Term) -> Res<i32> {
         return Ok(0);
     }
 
-    let mut filter = String::new();
+    let ssh_config = options.config.as_deref();
+    if let Some(q) = &options.query {
+        let lowered = q.to_lowercase();
+        if let Some(host) = menu_order(&groups)
+            .into_iter()
+            .find(|h| h.to_lowercase() == lowered)
+        {
+            out.click(&format!("Connecting to {host}..."), Color::Yellow)?;
+            return connect(&mut out, &host, ssh_config);
+        }
+    }
+
+    let mut filter = options.query.clone().unwrap_or_default();
     loop {
         let mut selectable: Vec<String> = Vec::new();
         let mut any_shown = false;
@@ -278,7 +358,7 @@ pub fn run(term: &Term) -> Res<i32> {
         };
 
         out.click(&format!("Connecting to {selected}..."), Color::Yellow)?;
-        return connect(&mut out, &selected);
+        return connect(&mut out, &selected, ssh_config);
     }
 }
 
@@ -290,11 +370,15 @@ impl Out<'_> {
 }
 
 /// Run `ssh <host>` with the terminal handed over, and report how it ended.
-fn connect(out: &mut Out, host: &str) -> Res<i32> {
+fn connect(out: &mut Out, host: &str, ssh_config: Option<&std::path::Path>) -> Res<i32> {
     INTERRUPTED.store(false, Ordering::SeqCst);
     MODE.store(MODE_CHILD, Ordering::SeqCst);
+    let mut cmd = Command::new("ssh");
+    if let Some(path) = ssh_config {
+        cmd.arg("-F").arg(path);
+    }
     // `--` keeps the host from ever being read as an ssh option.
-    let child = Command::new("ssh").arg("--").arg(host).spawn();
+    let child = cmd.arg("--").arg(host).spawn();
     let mut child = match child {
         Ok(c) => c,
         Err(e) if e.kind() == io::ErrorKind::NotFound => {

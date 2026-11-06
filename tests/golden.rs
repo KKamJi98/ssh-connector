@@ -105,9 +105,16 @@ fn run(c: &Value) -> Option<(String, String, i32)> {
             }
         }
     }
+    // `--version` prints the crate version; the fixtures are version-free.
+    let ver = format!("ssh-connector {}\n", env!("CARGO_PKG_VERSION"));
+    let clean = |b: Vec<u8>| {
+        sandbox
+            .redact(&String::from_utf8(b).unwrap())
+            .replace(&ver, "ssh-connector <VERSION>\n")
+    };
     Some((
-        sandbox.redact(&String::from_utf8(out.stdout).unwrap()),
-        sandbox.redact(&String::from_utf8(out.stderr).unwrap()),
+        clean(out.stdout),
+        clean(out.stderr),
         out.status.code().unwrap_or(-1),
     ))
 }

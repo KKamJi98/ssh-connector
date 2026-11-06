@@ -1,5 +1,86 @@
 {
  "cases": {
+  "args-dash": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "No valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "args-extra-one": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "No valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "args-extra-two": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "",
+    "stderr": "error: unexpected argument 'b' found\n\nUsage: ssh-connector [OPTIONS] [QUERY]\n\nFor more information, try '--help'.\n",
+    "code": 2
+   }
+  },
+  "args-help": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "A CLI tool to list hosts from ~/.ssh/config and connect to them\n\nUsage: ssh-connector [OPTIONS] [QUERY]\n\nArguments:\n  [QUERY]  Connect to QUERY if it is a host name; otherwise open the menu filtered by it\n\nOptions:\n      --list           Print the host names, one per line, in menu order, and exit\n  -F, --config <FILE>  Read this ssh config instead of ~/.ssh/config (ssh gets it as -F too)\n  -h, --help           Print help\n  -V, --version        Print version\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "args-help-extra": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "A CLI tool to list hosts from ~/.ssh/config and connect to them\n\nUsage: ssh-connector [OPTIONS] [QUERY]\n\nArguments:\n  [QUERY]  Connect to QUERY if it is a host name; otherwise open the menu filtered by it\n\nOptions:\n      --list           Print the host names, one per line, in menu order, and exit\n  -F, --config <FILE>  Read this ssh config instead of ~/.ssh/config (ssh gets it as -F too)\n  -h, --help           Print help\n  -V, --version        Print version\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "args-help-then-unknown": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "A CLI tool to list hosts from ~/.ssh/config and connect to them\n\nUsage: ssh-connector [OPTIONS] [QUERY]\n\nArguments:\n  [QUERY]  Connect to QUERY if it is a host name; otherwise open the menu filtered by it\n\nOptions:\n      --list           Print the host names, one per line, in menu order, and exit\n  -F, --config <FILE>  Read this ssh config instead of ~/.ssh/config (ssh gets it as -F too)\n  -h, --help           Print help\n  -V, --version        Print version\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "args-short-h": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "A CLI tool to list hosts from ~/.ssh/config and connect to them\n\nUsage: ssh-connector [OPTIONS] [QUERY]\n\nArguments:\n  [QUERY]  Connect to QUERY if it is a host name; otherwise open the menu filtered by it\n\nOptions:\n      --list           Print the host names, one per line, in menu order, and exit\n  -F, --config <FILE>  Read this ssh config instead of ~/.ssh/config (ssh gets it as -F too)\n  -h, --help           Print help\n  -V, --version        Print version\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "args-unknown": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "",
+    "stderr": "error: unexpected argument '--bogus' found\n\n  tip: to pass '--bogus' as a value, use '-- --bogus'\n\nUsage: ssh-connector [OPTIONS] [QUERY]\n\nFor more information, try '--help'.\n",
+    "code": 2
+   }
+  },
+  "args-version": {
+   "bug": "4",
+   "reason": "Phase 4 command line: clap help with -h/-V/--version, QUERY, --list and -F",
+   "expected": {
+    "stdout": "ssh-connector <VERSION>\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "config-keyword-forms": {
    "bug": "3.8",
    "reason": "'Keyword=value' lines (Host=web, Include=file) are read as ssh does",

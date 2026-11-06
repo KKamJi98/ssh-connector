@@ -219,6 +219,7 @@ jobs:
 
             def install
               bin.install "ssh-connector"
+              generate_completions_from_executable(bin/"ssh-connector", shell_parameter_format: :clap)
             end
 
             test do
