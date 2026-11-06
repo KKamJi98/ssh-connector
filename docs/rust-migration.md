@@ -147,3 +147,46 @@ one static binary per platform and no Python runtime.
 - Python packaging (`pyproject.toml`, `uv.lock`, PyPI jobs) is gone. PyPI
   0.3.1 stays published as the way back; the `pypi` environment is left in
   place.
+
+## Phase 3: bug fixes
+
+Each fix is its own commit with a test that failed before it. Golden cases
+whose output changed are listed in `tests/golden/changes.json` with the bug
+number and the reason; `cases.json` still holds what Python printed.
+
+| # | Fix | Golden cases changed |
+|---|---|---|
+| 3.1 | Exit with ssh's exit code (128 + signal when ssh is killed) | ssh-exit-1, ssh-exit-130, ssh-exit-255 |
+| 3.2 | Missing ssh: message on stderr, exit 127 | ssh-missing |
+| 3.3 | End of input quits like `q`; Ctrl-C exits 130 (also while ssh runs) | pick-eof, filter-eof; `tests/signals.rs` |
+| 3.4 | Hosts starting with `-` are not listed; ssh gets `-- <host>` | every case that runs ssh, ssh-dash-host |
+| 3.5 | Negated patterns (`!name`) are not listed | config-wildcards |
+| 3.6 | `?` patterns are not listed | config-wildcards |
+| 3.7 | A word starting with `#` starts a comment | config-trailing-comment |
+| 3.8 | `Keyword=value` lines | config-keyword-forms, include-equals-form |
+| 3.9 | Quotes and backslash escapes as in OpenSSH's `argv_split`; names with whitespace are not listed | config-quoted |
+| 3.10 | Relative `Include` resolves against `~/.ssh` | include-nested-relative, unix-symlinked-config |
+| 3.11 | `${VAR}` in `Include` paths | include-env-var |
+| 3.12 | Names print literally (rich markup crash) | none: Python crashed; `tests/cli.rs` |
+| 3.13 | A non-UTF-8 byte no longer drops the whole file | config-non-utf8-* |
+| 3.14 | Same-named included files keep separate groups, labelled by path | groups-same-basename, include-order-sorted |
+| 3.15 | README drift (`-abort`, Python 3.13) | fixed by the Phase 2 README rewrite |
+
+Checked against the real tools:
+
+- `ssh -G` (OpenSSH 10.2p1, macOS) for 3.5-3.9 and the `--` separator.
+- `ssh.exe -G -- localhost` with OpenSSH_for_Windows_9.5p2 accepts `--` too.
+- 3.10 follows the ssh_config(5) text; it was not run against the real
+  `~/.ssh` (see the plan's note on `~` expansion).
+
+Found while doing this: the golden case for a missing ssh still had
+`/usr/bin` on PATH, so the Python recording had run the real ssh against
+the made-up host `alpha` (it failed DNS). The harness now leaves PATH empty
+for that case and the fixture was re-recorded (commit "keep the
+missing-ssh golden case away from the real ssh").
+
+Development note: `cargo publish --dry-run` verifies the packaged copy in
+the shared `target/` and leaves `target/debug/ssh-connector` built from
+`target/package/`, after which cargo considers it fresh even when `src/`
+changes. Run `cargo clean` after a dry run, or give the dry run its own
+`--target-dir`.
