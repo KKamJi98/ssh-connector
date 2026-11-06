@@ -9,6 +9,60 @@
     "code": 0
    }
   },
+  "config-non-utf8-after-8k": {
+   "bug": "3.13",
+   "reason": "a byte that is not UTF-8 no longer drops the whole file; it is replaced and the rest is read",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ one  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "config-non-utf8-include": {
+   "bug": "3.13",
+   "reason": "a byte that is not UTF-8 no longer drops the whole file; it is replaced and the rest is read",
+   "expected": {
+    "stdout": "   Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ main1 ║\n╚═════╧═══════╝\n   inc (1)    \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ x    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "config-non-utf8-main": {
+   "bug": "3.13",
+   "reason": "a byte that is not UTF-8 no longer drops the whole file; it is replaced and the rest is read",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ one  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "config-non-utf8-split-char": {
+   "bug": "3.13",
+   "reason": "a byte that is not UTF-8 no longer drops the whole file; it is replaced and the rest is read",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ one  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "config-non-utf8-start-byte": {
+   "bug": "3.13",
+   "reason": "a byte that is not UTF-8 no longer drops the whole file; it is replaced and the rest is read",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ one  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "config-non-utf8-truncated": {
+   "bug": "3.13",
+   "reason": "a byte that is not UTF-8 no longer drops the whole file; it is replaced and the rest is read",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ one  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "config-quoted": {
    "bug": "3.9",
    "reason": "quoted words and backslash escapes are read as ssh does",

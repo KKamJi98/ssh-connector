@@ -195,65 +195,6 @@ fn universal_lines(text: &str) -> impl Iterator<Item = &str> {
     })
 }
 
-/// Python's message for a failed strict UTF-8 decode of `buf`, where the
-/// error position is counted from the start of `buf`.
-fn decode_error_message(buf: &[u8], err: std::str::Utf8Error) -> String {
-    let start = err.valid_up_to();
-    let len = err.error_len().unwrap_or(buf.len() - start);
-    let reason = match err.error_len() {
-        None => "unexpected end of data",
-        Some(_) if matches!(buf[start], 0xC2..=0xF4) => "invalid continuation byte",
-        Some(_) => "invalid start byte",
-    };
-    if len <= 1 {
-        format!(
-            "'utf-8' codec can't decode byte 0x{:02x} in position {start}: {reason}",
-            buf[start]
-        )
-    } else {
-        format!(
-            "'utf-8' codec can't decode bytes in position {start}-{}: {reason}",
-            start + len - 1
-        )
-    }
-}
-
-/// Decode a file the way Python's text-mode file iteration does: 8192-byte
-/// chunks through an incremental decoder. Only the error message depends on
-/// this, because Python counts the error position from the start of the
-/// chunk (plus any partial character carried over), not of the file.
-fn decode_like_python(bytes: &[u8]) -> Result<&str, String> {
-    const CHUNK: usize = 8192;
-    if let Ok(text) = std::str::from_utf8(bytes) {
-        return Ok(text);
-    }
-    let mut pending_start = 0;
-    let mut pos = 0;
-    loop {
-        let chunk_end = (pos + CHUNK).min(bytes.len());
-        let buf = &bytes[pending_start..chunk_end];
-        let at_eof = chunk_end == bytes.len();
-        match std::str::from_utf8(buf) {
-            Ok(_) => pending_start = chunk_end,
-            Err(e) => match e.error_len() {
-                Some(_) => return Err(decode_error_message(buf, e)),
-                None if at_eof => {
-                    // The final decode only sees the incomplete tail.
-                    let tail = &buf[e.valid_up_to()..];
-                    let err = std::str::from_utf8(tail).unwrap_err();
-                    return Err(decode_error_message(tail, err));
-                }
-                None => pending_start += e.valid_up_to(),
-            },
-        }
-        if at_eof {
-            // Not reached: the whole input failed to decode above.
-            return Err(String::new());
-        }
-        pos = chunk_end;
-    }
-}
-
 /// Python `repr()` of a path string, enough for error messages.
 fn py_repr(s: &str) -> String {
     let quote = if s.contains('\'') && !s.contains('"') {
@@ -382,17 +323,13 @@ impl Parser {
                 return Vec::new();
             }
         };
-        let text = match decode_like_python(&bytes) {
-            Ok(t) => t,
-            Err(message) => {
-                self.report(message);
-                return Vec::new();
-            }
-        };
+        // A byte that is not UTF-8 (a Latin-1 comment, say) must not hide the
+        // rest of the file. ssh itself does not care about the encoding.
+        let text = String::from_utf8_lossy(&bytes);
 
         let mut hosts = Vec::new();
         let mut includes: Vec<Vec<String>> = Vec::new();
-        for raw in universal_lines(text) {
+        for raw in universal_lines(&text) {
             let line = raw.trim();
             if line.is_empty() || line.starts_with('#') {
                 continue;
@@ -410,8 +347,10 @@ impl Parser {
                     // '*' and '?' make a pattern, not a host name. A name
                     // starting with '-' would reach ssh as an option. A
                     // negated pattern ('!name') matches no host by itself.
-                    // ssh refuses host names with whitespace in them.
-                    if !value.contains(['*', '?'])
+                    // ssh refuses host names with whitespace in them. A name
+                    // with bytes that were not UTF-8 cannot be passed on as
+                    // written, so it is left out too.
+                    if !value.contains(['*', '?', char::REPLACEMENT_CHARACTER])
                         && !value.contains(char::is_whitespace)
                         && !value.starts_with('-')
                         && !value.starts_with('!')
@@ -616,25 +555,10 @@ mod tests {
     }
 
     #[test]
-    fn decode_messages_match_python() {
-        let msg = |b: &[u8]| decode_like_python(b).unwrap_err();
-        assert_eq!(
-            msg(b"# caf\xe9\nHost one\n"),
-            "'utf-8' codec can't decode byte 0xe9 in position 5: invalid continuation byte"
-        );
-        assert_eq!(
-            msg(b"x\xffy"),
-            "'utf-8' codec can't decode byte 0xff in position 1: invalid start byte"
-        );
-        assert_eq!(
-            msg(b"Host one\n\xe2\x82"),
-            "'utf-8' codec can't decode bytes in position 0-1: unexpected end of data"
-        );
-        let mut big = vec![b'#'; 9000];
-        big[8500] = 0xff;
-        assert_eq!(
-            msg(&big),
-            "'utf-8' codec can't decode byte 0xff in position 308: invalid start byte"
-        );
+    fn non_utf8_bytes_do_not_hide_hosts() {
+        let d = tempfile::tempdir().unwrap();
+        let cfg = d.path().join("config");
+        fs::write(&cfg, b"# caf\xe9\nHost one\nHost tw\xffo\n").unwrap();
+        assert_eq!(hosts(&cfg), vec!["one"]);
     }
 }
