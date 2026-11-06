@@ -102,6 +102,14 @@ fn starts_with_keyword(line: &str, keyword: &str) -> bool {
     }
 }
 
+/// The arguments after the keyword. As in ssh_config, a word that starts
+/// with '#' begins a comment that runs to the end of the line.
+fn arguments(line: &str) -> impl Iterator<Item = &str> {
+    line.split_whitespace()
+        .skip(1)
+        .take_while(|word| !word.starts_with('#'))
+}
+
 /// Python universal-newline line splitting: `\r\n`, `\r` and `\n`.
 fn universal_lines(text: &str) -> impl Iterator<Item = &str> {
     let mut rest = text;
@@ -324,15 +332,14 @@ impl Parser {
                 continue;
             }
             if starts_with_keyword(line, "Include") {
-                let parts: Vec<String> =
-                    line.split_whitespace().skip(1).map(String::from).collect();
+                let parts: Vec<String> = arguments(line).map(String::from).collect();
                 if !parts.is_empty() {
                     includes.push(parts);
                 }
                 continue;
             }
             if starts_with_keyword(line, "Host") {
-                for value in line.split_whitespace().skip(1) {
+                for value in arguments(line) {
                     // '*' and '?' make a pattern, not a host name. A name
                     // starting with '-' would reach ssh as an option. A
                     // negated pattern ('!name') matches no host by itself.
@@ -494,6 +501,14 @@ mod tests {
         assert!(starts_with_keyword("Host=foo", "Host"));
         assert!(!starts_with_keyword("HostName foo", "Host"));
         assert!(!starts_with_keyword("Hos", "Host"));
+    }
+
+    #[test]
+    fn comment_ends_the_arguments() {
+        let v: Vec<&str> = arguments("Host a b # c d").collect();
+        assert_eq!(v, vec!["a", "b"]);
+        let v: Vec<&str> = arguments("Host a#b").collect();
+        assert_eq!(v, vec!["a#b"]);
     }
 
     #[test]

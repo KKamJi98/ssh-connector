@@ -1,5 +1,14 @@
 {
  "cases": {
+  "config-trailing-comment": {
+   "bug": "3.7",
+   "reason": "a word starting with '#' starts a comment, as in ssh_config",
+   "expected": {
+    "stdout": "     Main (1)     \n╔═════╤══════════╗\n║ No. │ Host     ║\n╟─────┼──────────╢\n║ 1   │ trailing ║\n╚═════╧══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "config-wildcards": {
    "bug": "3.5, 3.6",
    "reason": "negated patterns ('!name') are not listed as hosts; '?' wildcard patterns are not listed as hosts",
