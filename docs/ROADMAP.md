@@ -14,6 +14,8 @@ out of 0.4.0. Nothing here is promised.
   `Include` is always read.
 - Expand `%` tokens (`%d`, `%u`, ...) in `Include` paths.
 - Show a host that is defined in two files once, not once per group.
+- Complete host names from the `-F` file when one is on the command line;
+  completion reads `~/.ssh/config` today.
 
 ## P3
 

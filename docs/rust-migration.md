@@ -212,3 +212,30 @@ changes. Run `cargo clean` after a dry run, or give the dry run its own
   (CI run 42235363547). A renamed or symlinked binary now prints the same
   text as well.
 - P2 and P3 ideas are in `docs/ROADMAP.md`.
+
+## Pre-merge review (2026-11-06)
+
+An independent review of the whole branch found the following. What was
+changed and what was left:
+
+- Windows printed `ssh-connector.exe` in usage text: fixed with `bin_name`
+  (see Phase 4).
+- release-please tag format: the reviewer read release-please 17.x, where
+  the rust strategy takes the crate name as component and includes it in
+  the tag by default, which would give `kkamji-ssh-connector-v0.4.0` and
+  never start `release.yml`. The action at v5.0.0 declares
+  `include-component-in-tag` with `default: false` in `action.yml` and
+  passes it on, so the tag should already be `v0.4.0`. The input is now set
+  to `false` explicitly so the tag format does not depend on that default.
+- Signal tests waited a fixed 300 ms for ssh to start. They now wait until
+  the fake ssh prints its argv to stderr.
+- `ExitCode::from(code as u8)` truncated codes above 255. Windows ssh can end
+  with an NTSTATUS such as `0xC000013A`, and a multiple of 256 would have
+  become 0. Such codes now go to `std::process::exit` unchanged; a
+  Windows-only test covers 300 and 512.
+- Left as is, recorded in `docs/ROADMAP.md`: `%` tokens in `Include` paths
+  (the Python version did not expand them either) and completion that
+  ignores `-F`.
+- The first `crates-io` job of 0.4.0 is expected to fail, because Trusted
+  Publishing can only be set up for a crate that exists. The plan covers
+  it: publish 0.4.0 by hand, register the trusted publisher, re-run the job.
