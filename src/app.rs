@@ -291,11 +291,10 @@ fn connect(out: &mut Out, host: &str) -> Res<i32> {
         Ok(c) => c,
         Err(e) if e.kind() == io::ErrorKind::NotFound => {
             MODE.store(MODE_OTHER, Ordering::SeqCst);
-            out.click(
-                "Error: 'ssh' command not found. Is OpenSSH client installed and in your PATH?",
-                Color::Red,
-            )?;
-            return Ok(0);
+            let message = "Error: 'ssh' command not found. Is OpenSSH client installed and in your PATH?";
+            let _ = writeln!(io::stderr(), "{}", out.term.click_err(message, Color::Red));
+            // 127: the shell's code for "command not found".
+            return Ok(127);
         }
         Err(e) => {
             MODE.store(MODE_OTHER, Ordering::SeqCst);

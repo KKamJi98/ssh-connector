@@ -97,6 +97,8 @@ pub struct Term {
     rich_no_color: bool,
     /// click would keep the colour of `click.style` text.
     click_ansi: bool,
+    /// The same, for text written to stderr.
+    click_ansi_err: bool,
     /// The width rich lays tables out against.
     pub width: usize,
 }
@@ -145,6 +147,7 @@ impl Term {
             rich_ansi: rich_terminal && !dumb,
             rich_no_color,
             click_ansi: stdout_tty,
+            click_ansi_err: std::io::stderr().is_terminal(),
             width,
         }
     }
@@ -164,7 +167,16 @@ impl Term {
 
     /// click-styled text (`click.style(text, fg=...)` then `click.echo`).
     pub fn click(&self, text: &str, color: Color) -> String {
-        if self.click_ansi {
+        self.click_to(text, color, self.click_ansi)
+    }
+
+    /// click-styled text for stderr.
+    pub fn click_err(&self, text: &str, color: Color) -> String {
+        self.click_to(text, color, self.click_ansi_err)
+    }
+
+    fn click_to(&self, text: &str, color: Color, ansi: bool) -> String {
+        if ansi {
             format!("\x1b[{}m{text}\x1b[0m", color.code())
         } else {
             text.to_string()
