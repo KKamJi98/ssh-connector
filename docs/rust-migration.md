@@ -83,3 +83,32 @@ written here.
   `DOUBLE_EDGE` box, a centred title, a bold header and one cell of padding.
 - rich writes every padding and content piece as its own styled segment, so
   even the ANSI bytes can be compared exactly (with `FORCE_COLOR=1`).
+
+## Phase 1: parity port
+
+### How parity is checked
+
+- `tests/golden/cases.json` holds 91 cases recorded from PyPI
+  `ssh-connector==0.3.1` with `click==8.5.0` and `rich==15.0.0`
+  (`scripts/golden.py generate`). Each case has its own HOME, a PATH with
+  only a fake ssh (`examples/fake-ssh.rs`), piped stdin and stdout.
+  `cargo test` replays them; stdout, stderr and the exit code must match
+  byte for byte. CI does not need Python.
+- `scripts/compare-tty.py` runs both versions on a pseudo-terminal for what
+  pipes cannot show: colour from isatty, `^C` and `^D` echo, Ctrl-C to the
+  process group while ssh runs, `NO_COLOR`, `TERM=dumb`, a 12-column
+  terminal. All 13 scenarios matched byte for byte on macOS (2026-11-06).
+- `tests/signals.rs` checks the two Ctrl-C paths with SIGINT in CI.
+
+### Inputs left out of the golden set, and why
+
+| Input | Python 0.3.1 | Rust | Why it is left out |
+|---|---|---|---|
+| Host or file name that rich reads as markup (`a[/b]`, `[bold]x`) | crash (`MarkupError`) or styled text | printed literally | A crash is not behaviour to keep (bug 12). |
+| Number typed with non-ASCII digits (`٢`) or underscores (`1_0`) | accepted by `int()` | "Invalid input" | Accidental: `int()` quirks, not a feature. |
+| Error text for usage errors other than unknown option and extra arguments (`--hel` suggestions, `--help=x`) | click wording | close but not identical | Wording only; stream and exit code match. |
+| `FORCE_COLOR` for click's one-line messages | ignored by click | ignored | Covered; listed so it is not "fixed" by accident. |
+| Grapheme clusters (combining marks, ZWJ emoji) in host names | rich 15 measures graphemes | measured per code point | Not seen in ssh configs. |
+| Whitespace characters `\x1c`-`\x1f` around config lines | stripped by `str.strip()` | kept | Control characters; not seen in ssh configs. |
+| `~user/...` in `Include` | expanded from passwd | left as is | Needs a passwd lookup for a rare form. |
+| Files that are not UTF-8 on Windows | decoded with the ANSI code page | decoded as UTF-8 | The Python behaviour depended on the locale. |
