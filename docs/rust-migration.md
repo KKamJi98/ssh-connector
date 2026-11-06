@@ -112,3 +112,38 @@ written here.
 | Whitespace characters `\x1c`-`\x1f` around config lines | stripped by `str.strip()` | kept | Control characters; not seen in ssh configs. |
 | `~user/...` in `Include` | expanded from passwd | left as is | Needs a passwd lookup for a rare form. |
 | Files that are not UTF-8 on Windows | decoded with the ANSI code page | decoded as UTF-8 | The Python behaviour depended on the locale. |
+
+### Measurements (macOS arm64, 20 runs, median, `q` on stdin)
+
+| Case | Python 0.3.1 | Rust (release) |
+|---|---|---|
+| 4 hosts | 47.1 ms | 4.2 ms |
+| Ethan's real `~/.ssh/config` | 42.5 ms | 4.3 ms |
+| 6000 hosts | 504.0 ms | 12.0 ms |
+| Install size | 8.6 MB venv plus a Python interpreter | 686,224-byte binary |
+
+For an interactive picker the speed difference is not noticeable; the gain is
+one static binary per platform and no Python runtime.
+
+## Phase 2: CI and release
+
+- `ci.yml`: fmt, clippy `-D warnings` and `cargo test --locked` on ubuntu,
+  macos and windows; cargo-deny (`deny.toml`).
+- `release-please.yml` (push to main): the same checks as a gate, then
+  release-please with the GitHub App token and `release-type: rust`. It no
+  longer publishes anything.
+- `release.yml` (push of a `v*` tag): tag vs `Cargo.toml` check, five
+  targets, archives + `.sha256` + build provenance attached to the release
+  that release-please opened (by tag name, which also fixes the old
+  `gh release list --limit 1` lookup), `Formula/ssh-connector.rb` pushed to
+  `KKamJi98/homebrew-tap` with the deploy key `HOMEBREW_TAP_DEPLOY_KEY`, and
+  `cargo publish` through crates.io Trusted Publishing in the `release`
+  environment. The publish step skips a version that is already on
+  crates.io, because the first version is published by hand.
+- The crate is `kkamji-ssh-connector` (`ssh-connector` on crates.io belongs to
+  github.com/chojs23/ssh-connector, which also installs an `ssh-connector`
+  binary). The binary, the formula and the shell integration keep the name
+  `ssh-connector`.
+- Python packaging (`pyproject.toml`, `uv.lock`, PyPI jobs) is gone. PyPI
+  0.3.1 stays published as the way back; the `pypi` environment is left in
+  place.
