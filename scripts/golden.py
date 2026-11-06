@@ -334,7 +334,9 @@ def run_case(binary: str, c: dict, fake_ssh: Path) -> dict:
         if c.get("ssh", True):
             shutil.copy(fake_ssh, bindir / "ssh")
         setup_home(home, c)
-        env = {"HOME": str(home), "PATH": f"{bindir}:/usr/bin:/bin"}
+        # Without the fake, PATH holds nothing at all: /usr/bin has a real ssh.
+        path = f"{bindir}:/usr/bin:/bin" if c.get("ssh", True) else str(bindir)
+        env = {"HOME": str(home), "PATH": path}
         env.update(c.get("env", {}))
         try:
             p = subprocess.run(

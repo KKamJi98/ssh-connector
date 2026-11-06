@@ -57,7 +57,9 @@ impl Sandbox {
         c.env("HOME", &home);
         c.env("USERPROFILE", &home);
         let bin = self.dir.path().join("bin");
-        if cfg!(windows) {
+        let has_ssh = bin.join(format!("ssh{}", std::env::consts::EXE_SUFFIX)).exists();
+        // Without the fake, PATH holds nothing else: /usr/bin has a real ssh.
+        if cfg!(windows) || !has_ssh {
             c.env("PATH", &bin);
             if let Some(root) = std::env::var_os("SystemRoot") {
                 c.env("SystemRoot", root);
