@@ -101,11 +101,57 @@ fn split_keyword(line: &str) -> (&str, &str) {
     (keyword, rest)
 }
 
-/// The arguments after the keyword. As in ssh_config, a word that starts
-/// with '#' begins a comment that runs to the end of the line.
-fn arguments(rest: &str) -> impl Iterator<Item = &str> {
-    rest.split_whitespace()
-        .take_while(|word| !word.starts_with('#'))
+/// The arguments after the keyword, split as OpenSSH's `argv_split` does:
+/// words separated by spaces or tabs, `"..."` or `'...'` quoting (quotes are
+/// removed), backslash escapes for quotes, backslash and space, and a word
+/// that starts with '#' begins a comment to the end of the line. `None`
+/// means an unclosed quote; ssh rejects such a line.
+fn arguments(rest: &str) -> Option<Vec<String>> {
+    let chars: Vec<char> = rest.chars().collect();
+    let mut args = Vec::new();
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] == ' ' || chars[i] == '\t' {
+            i += 1;
+            continue;
+        }
+        if chars[i] == '#' {
+            break;
+        }
+        let mut arg = String::new();
+        let mut quote: Option<char> = None;
+        while i < chars.len() {
+            let c = chars[i];
+            let next = chars.get(i + 1).copied();
+            if c == '\\' {
+                match next {
+                    Some(n @ ('\'' | '"' | '\\')) => {
+                        arg.push(n);
+                        i += 1;
+                    }
+                    Some(' ') if quote.is_none() => {
+                        arg.push(' ');
+                        i += 1;
+                    }
+                    _ => arg.push(c),
+                }
+            } else if quote.is_none() && (c == ' ' || c == '\t') {
+                break;
+            } else if quote.is_none() && (c == '"' || c == '\'') {
+                quote = Some(c);
+            } else if quote == Some(c) {
+                quote = None;
+            } else {
+                arg.push(c);
+            }
+            i += 1;
+        }
+        if quote.is_some() {
+            return None;
+        }
+        args.push(arg);
+    }
+    Some(args)
 }
 
 /// Python universal-newline line splitting: `\r\n`, `\r` and `\n`.
@@ -331,23 +377,25 @@ impl Parser {
             }
             let (keyword, rest) = split_keyword(line);
             if keyword.eq_ignore_ascii_case("Include") {
-                let parts: Vec<String> = arguments(rest).map(String::from).collect();
+                let parts = arguments(rest).unwrap_or_default();
                 if !parts.is_empty() {
                     includes.push(parts);
                 }
                 continue;
             }
             if keyword.eq_ignore_ascii_case("Host") {
-                for value in arguments(rest) {
+                for value in arguments(rest).unwrap_or_default() {
                     // '*' and '?' make a pattern, not a host name. A name
                     // starting with '-' would reach ssh as an option. A
                     // negated pattern ('!name') matches no host by itself.
+                    // ssh refuses host names with whitespace in them.
                     if !value.contains(['*', '?'])
+                        && !value.contains(char::is_whitespace)
                         && !value.starts_with('-')
                         && !value.starts_with('!')
                     {
                         hosts.push(Entry {
-                            host: value.to_string(),
+                            host: value,
                             source: real_path.clone(),
                         });
                     }
@@ -506,10 +554,25 @@ mod tests {
 
     #[test]
     fn comment_ends_the_arguments() {
-        let v: Vec<&str> = arguments("a b # c d").collect();
-        assert_eq!(v, vec!["a", "b"]);
-        let v: Vec<&str> = arguments("a#b").collect();
-        assert_eq!(v, vec!["a#b"]);
+        assert_eq!(arguments("a b # c d").unwrap(), vec!["a", "b"]);
+        assert_eq!(arguments("a#b").unwrap(), vec!["a#b"]);
+    }
+
+    #[test]
+    fn quotes_and_escapes_like_openssh() {
+        assert_eq!(
+            arguments(r#""quoted host" plain"#).unwrap(),
+            vec!["quoted host", "plain"]
+        );
+        assert_eq!(arguments("'a b'c d").unwrap(), vec!["a bc", "d"]);
+        assert_eq!(arguments(r"a\ b c").unwrap(), vec!["a b", "c"]);
+        assert_eq!(arguments(r#"a\"b"#).unwrap(), vec![r#"a"b"#]);
+        assert_eq!(arguments(r"a\x").unwrap(), vec![r"a\x"]);
+        assert_eq!(
+            arguments(r##""# not a comment" x"##).unwrap(),
+            vec!["# not a comment", "x"]
+        );
+        assert_eq!(arguments(r#""unclosed"#), None);
     }
 
     #[test]

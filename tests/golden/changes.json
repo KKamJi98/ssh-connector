@@ -9,6 +9,15 @@
     "code": 0
    }
   },
+  "config-quoted": {
+   "bug": "3.9",
+   "reason": "quoted words and backslash escapes are read as ssh does",
+   "expected": {
+    "stdout": "   Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ plain ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "config-trailing-comment": {
    "bug": "3.7",
    "reason": "a word starting with '#' starts a comment, as in ssh_config",
