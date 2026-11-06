@@ -1,3 +1,31 @@
 {
- "cases": {}
+ "cases": {
+  "ssh-exit-1": {
+   "bug": "3.1",
+   "reason": "ssh's exit code is passed through instead of always exiting 0",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 1
+   }
+  },
+  "ssh-exit-130": {
+   "bug": "3.1",
+   "reason": "ssh's exit code is passed through instead of always exiting 0",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 130
+   }
+  },
+  "ssh-exit-255": {
+   "bug": "3.1",
+   "reason": "ssh's exit code is passed through instead of always exiting 0",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 255
+   }
+  }
+ }
 }

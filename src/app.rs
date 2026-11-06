@@ -311,11 +311,28 @@ fn connect(out: &mut Out, host: &str) -> Res<i32> {
         out.click_plain("\nExiting.")?;
         return Ok(0);
     }
-    match status {
-        Some(s) if s.success() => {}
-        _ => out.click(&format!("SSH session for {host} ended."), Color::Blue)?,
+    let code = status.map(exit_code).unwrap_or(1);
+    if code != 0 {
+        out.click(&format!("SSH session for {host} ended."), Color::Blue)?;
     }
-    Ok(0)
+    // ssh's own exit code, so scripts and the shell see why it ended.
+    Ok(code)
+}
+
+/// The exit code a shell would report for `status`: the code itself, or
+/// 128 + the signal number when ssh was killed by a signal.
+fn exit_code(status: ExitStatus) -> i32 {
+    if let Some(code) = status.code() {
+        return code;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        if let Some(sig) = status.signal() {
+            return 128 + sig;
+        }
+    }
+    1
 }
 
 /// Wait for ssh. After a Ctrl-C reaches this process, give ssh 0.25 s to

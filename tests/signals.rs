@@ -103,3 +103,29 @@ fn interrupt_while_ssh_runs_stops_ssh_and_exits_0() {
     );
     assert_eq!(code, 0);
 }
+
+#[test]
+fn ssh_killed_by_a_signal_exits_with_128_plus_signal() {
+    let sb = Sandbox::new(true);
+    sb.write(".ssh/config", b"Host alpha\n");
+    let mut child = sb
+        .command()
+        .env("FAKE_SSH_SLEEP_MS", "5000")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.stdin.as_mut().unwrap().write_all(b"1\n").unwrap();
+    let seen = wait_for(&mut child, "Connecting to alpha...\n");
+    std::thread::sleep(Duration::from_millis(300));
+    // Terminate only ssh (the fake), not ssh-connector.
+    let ok = Command::new("pkill")
+        .args(["-TERM", "-P", &child.id().to_string()])
+        .status()
+        .unwrap();
+    assert!(ok.success());
+    let (out, _, code) = finish(child, seen);
+    assert!(out.ends_with("SSH session for alpha ended.\n"), "{out:?}");
+    assert_eq!(code, 128 + 15);
+}
