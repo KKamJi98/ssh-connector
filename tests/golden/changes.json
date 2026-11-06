@@ -63,6 +63,15 @@
     "code": 0
    }
   },
+  "include-env-var": {
+   "bug": "3.11",
+   "reason": "${VAR} in an Include path is expanded, as ssh does",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\n    extra (1)     \n╔═════╤══════════╗\n║ No. │ Host     ║\n╟─────┼──────────╢\n║ 2   │ env-host ║\n╚═════╧══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "include-equals-form": {
    "bug": "3.8",
    "reason": "'Keyword=value' lines (Host=web, Include=file) are read as ssh does",

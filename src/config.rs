@@ -83,6 +83,23 @@ fn expand_user(pattern: &str) -> String {
     }
 }
 
+/// `${NAME}` environment references in an `Include` path, which ssh expands
+/// (ssh_config(5), ENVIRONMENT VARIABLES). `None` for an undefined variable
+/// or an unclosed `${`.
+fn expand_env(pattern: &str) -> Option<String> {
+    let mut out = String::new();
+    let mut rest = pattern;
+    while let Some(start) = rest.find("${") {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + 2..];
+        let end = after.find('}')?;
+        out.push_str(&std::env::var(&after[..end]).ok()?);
+        rest = &after[end + 1..];
+    }
+    out.push_str(rest);
+    Some(out)
+}
+
 /// Hosts the menu never shows.
 pub fn is_ignored_host(host: &str) -> bool {
     let lowered = host.to_lowercase();
@@ -318,7 +335,11 @@ impl Parser {
             require_literal_leading_dot: true,
         };
         for pat in patterns {
-            let expanded = expand_user(pat);
+            // ssh fails the Include on an unknown variable; list nothing.
+            let Some(pat) = expand_env(pat) else {
+                continue;
+            };
+            let expanded = expand_user(&pat);
             let path = Path::new(&expanded);
             let full = if path.is_absolute() {
                 path.to_path_buf()
@@ -577,6 +598,15 @@ mod tests {
             vec!["# not a comment", "x"]
         );
         assert_eq!(arguments(r#""unclosed"#), None);
+    }
+
+    #[test]
+    fn env_references_expand() {
+        let path = std::env::var("PATH").unwrap();
+        assert_eq!(expand_env("${PATH}/x").unwrap(), format!("{path}/x"));
+        assert_eq!(expand_env("$PATH/x").unwrap(), "$PATH/x");
+        assert_eq!(expand_env("${SSH_CONNECTOR_SURELY_UNSET_VAR}"), None);
+        assert_eq!(expand_env("${PATH"), None);
     }
 
     #[test]
