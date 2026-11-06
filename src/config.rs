@@ -367,6 +367,8 @@ pub fn grouped_hosts(config_path: &Path) -> (Groups, Vec<String>) {
     let mut parser = Parser::new();
     let entries = parser.parse_file(config_path);
     let main = canonical(config_path).ok();
+    // (group, host) pairs already listed; a set keeps large configs linear.
+    let mut seen: HashSet<(usize, String)> = HashSet::new();
     for Entry { host, source } in entries {
         if is_ignored_host(&host) {
             continue;
@@ -387,7 +389,7 @@ pub fn grouped_hosts(config_path: &Path) -> (Groups, Vec<String>) {
                 groups.order.len() - 1
             }
         };
-        if !groups.hosts[idx].contains(&host) {
+        if seen.insert((idx, host.clone())) {
             groups.hosts[idx].push(host);
         }
     }
