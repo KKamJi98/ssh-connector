@@ -68,6 +68,7 @@ Select a host by its number (e.g. `4`) or its name (e.g. `prod-app-1`). The tool
 - Moves host names containing `jump` (case-insensitive) into a "JUMP-HOSTS" table at the bottom, with their source group.
 - Hides hosts whose names end with `-ignore` or contain `github`/`bitbucket` (case-insensitive).
 - Select a host by number or by name (case-insensitive), or press `f` to filter by substring.
+- Connect straight away with `ssh-connector <host>`, or list hosts with `--list`.
 - Connects with the `ssh` command on your `PATH`.
 
 ## Installation
@@ -120,14 +121,30 @@ To go back: `brew uninstall ssh-connector` and then `uv tool install ssh-connect
 ## Usage
 
 ```bash
-ssh-connector
+ssh-connector                # menu of all hosts
+ssh-connector prod-app-1     # a host name: connect right away
+ssh-connector prod           # anything else: the menu, filtered by "prod"
+ssh-connector --list         # host names, one per line, in menu order
+ssh-connector -F ./ssh_config  # another config file (ssh gets -F too)
 ```
 
-This shows your configured SSH hosts. Enter a host number or name to connect, `f` to filter, `q` to quit.
+In the menu, enter a host number or name to connect, `f` to filter, `q` (or Ctrl-D) to quit.
+
+The exit code is ssh's own exit code, 127 when `ssh` is not installed, and 130 after Ctrl-C.
+
+### Shell completion
+
+Host names complete for the `QUERY` argument. Homebrew installs the completion scripts. Otherwise, add one line to your shell's startup file:
+
+```bash
+source <(COMPLETE=bash ssh-connector)   # ~/.bashrc
+source <(COMPLETE=zsh ssh-connector)    # ~/.zshrc
+COMPLETE=fish ssh-connector | source    # ~/.config/fish/config.fish
+```
 
 ### How hosts are discovered and displayed
 
-- The tool reads `~/.ssh/config` and follows any `Include` directives it finds (globs are supported).
+- The tool reads `~/.ssh/config` and follows `Include` directives the way ssh does: globs, `~`, `${VAR}`, and relative paths taken from `~/.ssh`.
 - If you split entries into `~/.ssh/config.d/`, make sure your main config includes them:
 
 ```text
@@ -139,7 +156,7 @@ Host base
 
 - Hosts are grouped by the file they come from (`Main` for `~/.ssh/config`, the file name for included files).
 - Any host name containing `jump` (case-insensitive) is collected into a final "JUMP-HOSTS" section, with its source group in a separate column.
-- Hosts whose names end with `-ignore` or contain `github`/`bitbucket` are not shown.
+- Hosts whose names end with `-ignore` or contain `github`/`bitbucket` are not shown, and neither are patterns (`*`, `?`, `!name`).
 
 ## Development
 

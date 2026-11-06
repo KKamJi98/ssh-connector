@@ -190,3 +190,20 @@ the shared `target/` and leaves `target/debug/ssh-connector` built from
 `target/package/`, after which cargo considers it fresh even when `src/`
 changes. Run `cargo clean` after a dry run, or give the dry run its own
 `--target-dir`.
+
+## Phase 4: P1 additions
+
+- `-h`, `-V`/`--version` (clap defaults; click only had `--help`).
+- `ssh-connector <QUERY>`: a host name (case-insensitive) connects at once;
+  anything else opens the menu filtered by it.
+- `--list`: host names, one per line, in menu order (normal hosts by group,
+  then jump hosts), each once; filtered by QUERY when given.
+- `-F`/`--config FILE`: read another config; ssh gets `-F FILE` as well.
+  Relative `Include` paths still resolve against `~/.ssh`, as ssh does for
+  a `-F` file.
+- Shell completion: clap_complete's environment-driven engine
+  (`COMPLETE=<shell> ssh-connector`), candidates from the same list as
+  `--list`. It needs clap_complete's `unstable-dynamic` feature; the exact
+  version is pinned by Cargo.lock. Homebrew installs it with
+  `generate_completions_from_executable(..., shell_parameter_format: :clap)`.
+- P2 and P3 ideas are in `docs/ROADMAP.md`.
