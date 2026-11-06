@@ -239,3 +239,38 @@ changed and what was left:
 - The first `crates-io` job of 0.4.0 is expected to fail, because Trusted
   Publishing can only be set up for a crate that exists. The plan covers
   it: publish 0.4.0 by hand, register the trusted publisher, re-run the job.
+
+## Release 0.4.0 (2026-11-06)
+
+What happened, where it differed from the plan:
+
+- PR #9 was squash-merged as `af4e251` with a `Release-As: 0.4.0` footer.
+  release-please opened PR #11 at 0.4.0 (Cargo.toml, Cargo.lock,
+  CHANGELOG.md), with tag `v0.4.0`, not `kkamji-ssh-connector-v0.4.0`.
+  PR #11 was merged as `76f294a`; release-please created the tag and the
+  GitHub release.
+- `release.yml` run 42239884922, attempt 1: the `aarch64-apple-darwin`
+  build waited 15 minutes for a `macos-latest` runner and GitHub cancelled
+  it ("The job was not acquired by Runner of type hosted even after
+  multiple attempts"; notice: "Due to capacity constraints, jobs targeting
+  macOS arm64 runners may experience longer queue times"). The same label
+  had given runners to the `x86_64-apple-darwin` build and to CI minutes
+  earlier, and three other repositories were running macOS jobs at the same
+  time. `gh run rerun --failed` (attempt 2) built it and ran the publishing
+  jobs. If this recurs, re-run first; building both macOS targets in one
+  job would need fewer macOS runners but only applies to the next tag.
+- crates.io: the crate did not exist, so 0.4.0 was published by hand from
+  the tag commit (`cargo publish --locked`, separate target dir). The
+  trusted publisher was then registered on the crate's settings page
+  (GitHub, `KKamJi98/ssh-connector`, owner id 72260110, workflow
+  `release.yml`, environment `release`). "Require trusted publishing" was
+  left off. In attempt 2 the `crates-io` job found 0.4.0 (HTTP 200) and
+  skipped, so Trusted Publishing will first be used by the next release.
+- WSL: the shared plan said none of the tools was installed there. In fact
+  `~/.local/bin/ssh-connector` was a hand-written script running the Python
+  0.3.1 code from `~/.local/opt/migration-personal-cli`, and `~/.local/bin`
+  comes before linuxbrew in PATH. After `brew install`, only that script was
+  moved to `~/.local/state/rust-migration/backup/ssh-connector.python-shim`;
+  the shared directory (it also serves `awspick`) was left alone.
+- Mac: `uv tool uninstall ssh-connector` (was 0.3.1) after `brew install`
+  and after `/opt/homebrew/bin/ssh-connector --version` printed 0.4.0.
