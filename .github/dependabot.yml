@@ -10,3 +10,13 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  # Cargo.lock pins every crate; this keeps them current the same way.
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      cargo:
+        patterns:
+          - "*"

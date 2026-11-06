@@ -1,0 +1,74 @@
+# Versioning, CHANGELOG, tag and GitHub release. Nothing is built or published
+# here: release.yml does that, started by the tag this workflow creates.
+#
+# Why two workflows: crates.io publishing runs in the `release` environment,
+# which only admits tag refs (`v*`). This workflow runs on a push to main, so
+# a publish job here would be refused.
+#
+# release-please runs on a short-lived GitHub App installation token, not the
+# default GITHUB_TOKEN. GitHub does not start workflows for events caused by
+# GITHUB_TOKEN, so with it the release PR would get no CI and the tag would not
+# start release.yml. The App token lifts both. No long-lived PAT is used.
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  # main skips CI, so the gate lives here. A release must not be cut from code
+  # that was never run.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install stable Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy
+          rustup default stable
+
+      - name: Check
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets --locked -- -D warnings
+          cargo test --locked
+
+  # Every write goes through the App token, so GITHUB_TOKEN gets nothing. The
+  # token is scoped to this repository (no owner/repositories input) and to the
+  # two permissions release-please needs: contents for the release commit, tag
+  # and GitHub release, pull-requests for the release PR and its labels.
+  release-please:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # release-type rust bumps Cargo.toml and Cargo.lock together. Tags stay
+      # `v<version>` (no crate-name prefix), which release.yml listens for and
+      # which matches the tags of the Python releases.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          release-type: rust
+          include-component-in-tag: false

@@ -1,0 +1,1211 @@
+{
+ "reference": {
+  "ssh-connector": "0.3.1",
+  "click": "8.5.0",
+  "rich": "15.0.0"
+ },
+ "cases": [
+  {
+   "name": "args-help",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "--help"
+   ],
+   "expected": {
+    "stdout": "Usage: ssh-connector [OPTIONS]\n\n  A CLI tool to list hosts from ~/.ssh/config and connect to them.\n\nOptions:\n  --help  Show this message and exit.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "args-help-extra",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "--help",
+    "extra"
+   ],
+   "expected": {
+    "stdout": "Usage: ssh-connector [OPTIONS]\n\n  A CLI tool to list hosts from ~/.ssh/config and connect to them.\n\nOptions:\n  --help  Show this message and exit.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "args-short-h",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "-h"
+   ],
+   "expected": {
+    "stdout": "",
+    "stderr": "Usage: ssh-connector [OPTIONS]\nTry 'ssh-connector --help' for help.\n\nError: No such option '-h'.\n",
+    "code": 2
+   }
+  },
+  {
+   "name": "args-version",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "--version"
+   ],
+   "expected": {
+    "stdout": "",
+    "stderr": "Usage: ssh-connector [OPTIONS]\nTry 'ssh-connector --help' for help.\n\nError: No such option '--version'.\n",
+    "code": 2
+   }
+  },
+  {
+   "name": "args-unknown",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "--bogus"
+   ],
+   "expected": {
+    "stdout": "",
+    "stderr": "Usage: ssh-connector [OPTIONS]\nTry 'ssh-connector --help' for help.\n\nError: No such option '--bogus'.\n",
+    "code": 2
+   }
+  },
+  {
+   "name": "args-help-then-unknown",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "--help",
+    "--bogus"
+   ],
+   "expected": {
+    "stdout": "",
+    "stderr": "Usage: ssh-connector [OPTIONS]\nTry 'ssh-connector --help' for help.\n\nError: No such option '--bogus'.\n",
+    "code": 2
+   }
+  },
+  {
+   "name": "args-extra-one",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "extra"
+   ],
+   "expected": {
+    "stdout": "",
+    "stderr": "Usage: ssh-connector [OPTIONS]\nTry 'ssh-connector --help' for help.\n\nError: Got unexpected extra argument (extra)\n",
+    "code": 2
+   }
+  },
+  {
+   "name": "args-extra-two",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "a",
+    "b"
+   ],
+   "expected": {
+    "stdout": "",
+    "stderr": "Usage: ssh-connector [OPTIONS]\nTry 'ssh-connector --help' for help.\n\nError: Got unexpected extra arguments (a b)\n",
+    "code": 2
+   }
+  },
+  {
+   "name": "args-dash",
+   "files": {},
+   "stdin": "",
+   "args": [
+    "-"
+   ],
+   "expected": {
+    "stdout": "",
+    "stderr": "Usage: ssh-connector [OPTIONS]\nTry 'ssh-connector --help' for help.\n\nError: Got unexpected extra argument (-)\n",
+    "code": 2
+   }
+  },
+  {
+   "name": "args-double-dash",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "args": [
+    "--"
+   ],
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-quit",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-quit-upper",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "Q\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-number",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "2\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to beta...\n",
+    "stderr": "fake-ssh argv=[\"beta\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-name-case",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "GAMMA\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to gamma...\n",
+    "stderr": "fake-ssh argv=[\"gamma\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-jump-number",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "4\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to jump-a...\n",
+    "stderr": "fake-ssh argv=[\"jump-a\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-name-is-number",
+   "files": {
+    ".ssh/config": "Host alpha\nHost beta\nHost 1\n"
+   },
+   "stdin": "1\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ 1     ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to 1...\n",
+    "stderr": "fake-ssh argv=[\"1\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-whitespace-number",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": " 2 \n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to beta...\n",
+    "stderr": "fake-ssh argv=[\"beta\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-plus-number",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "+1\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-zero",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "0\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Invalid number. Please try again.\n   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-negative",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "-1\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Invalid number. Please try again.\n   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-too-big",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "99\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Invalid number. Please try again.\n   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-huge",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "99999999999999999999999999\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Invalid number. Please try again.\n   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-garbage",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "nope\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Invalid input. Please enter a number, host name, 'q', or 'f'.\n   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-space-only",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": " \nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Invalid input. Please enter a number, host name, 'q', or 'f'.\n   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-empty-reprompt",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "\n\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "pick-eof",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): ",
+    "stderr": "Aborted!\n",
+    "code": 1
+   }
+  },
+  {
+   "name": "pick-eof-partial",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "2",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to beta...\n",
+    "stderr": "fake-ssh argv=[\"beta\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "filter-match",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "f\nAL\n1\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term:    Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "filter-jump-only",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "f\njump\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term:      JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 1   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "filter-none",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "f\nzzz\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term: No hosts found matching the filter.\n   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "filter-empty-reprompt",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "f\n\nbe\nq\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term: Enter filter term:    Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ beta ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "filter-eof",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "f\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term: ",
+    "stderr": "Aborted!\n",
+    "code": 1
+   }
+  },
+  {
+   "name": "filter-then-number",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "f\nma\n1\n",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term:    Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ gamma ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to gamma...\n",
+    "stderr": "fake-ssh argv=[\"gamma\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "ssh-exit-1",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "1\n",
+   "env": {
+    "FAKE_SSH_EXIT": "1"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "ssh-exit-255",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "1\n",
+   "env": {
+    "FAKE_SSH_EXIT": "255"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "ssh-exit-130",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "1\n",
+   "env": {
+    "FAKE_SSH_EXIT": "130"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
+    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "ssh-missing",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "1\n",
+   "ssh": false,
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nError: 'ssh' command not found. Is OpenSSH client installed and in your PATH?\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "ssh-dash-host",
+   "files": {
+    ".ssh/config": "Host -V\n"
+   },
+   "stdin": "1\n",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ -V   ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to -V...\n",
+    "stderr": "fake-ssh argv=[\"-V\"]\n",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-missing",
+   "files": {},
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "No valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-empty",
+   "files": {
+    ".ssh/config": ""
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "No valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-only-ignored",
+   "files": {
+    ".ssh/config": "Host x-ignore\nHost github.com\nHost my-bitbucket\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "No valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-abort-suffix",
+   "files": {
+    ".ssh/config": "Host keep-abort\nHost drop-ignore\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "      Main (1)      \n╔═════╤════════════╗\n║ No. │ Host       ║\n╟─────┼────────────╢\n║ 1   │ keep-abort ║\n╚═════╧════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-wildcards",
+   "files": {
+    ".ssh/config": "Host *\nHost *.corp a.*\nHost q?wild\nHost neg !excluded\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "     Main (3)      \n╔═════╤═══════════╗\n║ No. │ Host      ║\n╟─────┼───────────╢\n║ 1   │ q?wild    ║\n║ 2   │ neg       ║\n║ 3   │ !excluded ║\n╚═════╧═══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-keyword-forms",
+   "files": {
+    ".ssh/config": "host lower\nHOST upper\n  Host indented\n\tHost\ttabbed\nHostName nothost\nHost=eq\nHosts plural\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "     Main (4)     \n╔═════╤══════════╗\n║ No. │ Host     ║\n╟─────┼──────────╢\n║ 1   │ lower    ║\n║ 2   │ upper    ║\n║ 3   │ indented ║\n║ 4   │ tabbed   ║\n╚═════╧══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-trailing-comment",
+   "files": {
+    ".ssh/config": "Host trailing # comment here\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "     Main (4)     \n╔═════╤══════════╗\n║ No. │ Host     ║\n╟─────┼──────────╢\n║ 1   │ trailing ║\n║ 2   │ #        ║\n║ 3   │ comment  ║\n║ 4   │ here     ║\n╚═════╧══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-quoted",
+   "files": {
+    ".ssh/config": "Host \"quoted host\" plain\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "    Main (3)     \n╔═════╤═════════╗\n║ No. │ Host    ║\n╟─────┼─────────╢\n║ 1   │ \"quoted ║\n║ 2   │ host\"   ║\n║ 3   │ plain   ║\n╚═════╧═════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-crlf",
+   "files": {
+    ".ssh/config": "Host one\r\nHost two\r\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (2)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ one  ║\n║ 2   │ two  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-lone-cr",
+   "files": {
+    ".ssh/config": "Host one\rHost two\r"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (2)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ one  ║\n║ 2   │ two  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-bom",
+   "files": {
+    ".ssh/config": "﻿Host first\nHost second\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "    Main (1)    \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 1   │ second ║\n╚═════╧════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-hangul",
+   "files": {
+    ".ssh/config": "Host 서버-한글\nHost ok\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "     Main (2)      \n╔═════╤═══════════╗\n║ No. │ Host      ║\n╟─────┼───────────╢\n║ 1   │ 서버-한글 ║\n║ 2   │ ok        ║\n╚═════╧═══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-duplicates",
+   "files": {
+    ".ssh/other": "Host a\n",
+    ".ssh/config": "Host a\nHost a b\nInclude other\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (2)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ a    ║\n║ 2   │ b    ║\n╚═════╧══════╝\n  other (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 3   │ a    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-non-utf8-main",
+   "files": {},
+   "stdin": "q\n",
+   "config_b64": "IyBjYWbpCkhvc3Qgb25lCg==",
+   "expected": {
+    "stdout": "Error reading or parsing SSH config file: 'utf-8' codec can't decode byte 0xe9 in position 5: invalid continuation byte\nNo valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-non-utf8-start-byte",
+   "files": {},
+   "stdin": "q\n",
+   "config_b64": "SG9zdCBvbmUK/wo=",
+   "expected": {
+    "stdout": "Error reading or parsing SSH config file: 'utf-8' codec can't decode byte 0xff in position 9: invalid start byte\nNo valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-non-utf8-truncated",
+   "files": {},
+   "stdin": "q\n",
+   "config_b64": "SG9zdCBvbmUK4oI=",
+   "expected": {
+    "stdout": "Error reading or parsing SSH config file: 'utf-8' codec can't decode bytes in position 0-1: unexpected end of data\nNo valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-non-utf8-after-8k",
+   "files": {},
+   "stdin": "q\n",
+   "config_b64": "SG9zdCBvbmUKIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjI/8K",
+   "expected": {
+    "stdout": "Error reading or parsing SSH config file: 'utf-8' codec can't decode byte 0xff in position 308: invalid start byte\nNo valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-non-utf8-split-char",
+   "files": {},
+   "stdin": "q\n",
+   "config_b64": "SG9zdCBvbmUKIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj7ZWcIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjI/8K",
+   "expected": {
+    "stdout": "Error reading or parsing SSH config file: 'utf-8' codec can't decode byte 0xff in position 103: invalid start byte\nNo valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "config-non-utf8-include",
+   "files": {
+    ".ssh/config": "Host main1\nInclude inc\n"
+   },
+   "stdin": "q\n",
+   "files_b64": {
+    ".ssh/inc": "SG9zdCB4CiMg/wo="
+   },
+   "expected": {
+    "stdout": "Error reading or parsing SSH config file: 'utf-8' codec can't decode byte 0xff in position 9: invalid start byte\n   Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ main1 ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-nested-relative",
+   "files": {
+    ".ssh/config.d/01": "Host inc1\nInclude nested/*\n",
+    ".ssh/config.d/nested/n": "Host nested-rel-to-file\n",
+    ".ssh/nested/n": "Host nested-rel-to-ssh\n",
+    ".ssh/config": "Include config.d/*\nHost base1\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ base1 ║\n╚═════╧═══════╝\n    01 (1)    \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ inc1 ║\n╚═════╧══════╝\n           n (1)            \n╔═════╤════════════════════╗\n║ No. │ Host               ║\n╟─────┼────────────────────╢\n║ 3   │ nested-rel-to-file ║\n╚═════╧════════════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-order-sorted",
+   "files": {
+    ".ssh/a/x": "Host from-a\n",
+    ".ssh/b/x": "Host from-b\n",
+    ".ssh/config": "Include b/* a/*\nHost m\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\n     x (2)      \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 2   │ from-a ║\n║ 3   │ from-b ║\n╚═════╧════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-tilde",
+   "files": {
+    ".ssh/extra": "Host tilde-host\n",
+    ".ssh/config": "Include ~/.ssh/extra\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "     extra (1)      \n╔═════╤════════════╗\n║ No. │ Host       ║\n╟─────┼────────────╢\n║ 1   │ tilde-host ║\n╚═════╧════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-env-var",
+   "files": {
+    ".ssh/extra": "Host env-host\n",
+    ".ssh/config": "Include ${HOME}/.ssh/extra\nHost m\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-missing",
+   "files": {
+    ".ssh/config": "Include nothing/*\nInclude also-missing\nHost m\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-cycle",
+   "files": {
+    ".ssh/loop": "Include config\nHost l\n",
+    ".ssh/config": "Include config\nInclude loop\nHost m\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\n   loop (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ l    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-hidden-glob",
+   "files": {
+    ".ssh/d/.hidden": "Host hidden\n",
+    ".ssh/d/shown": "Host shown\n",
+    ".ssh/config": "Include d/*\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   shown (1)   \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ shown ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-recursive-glob",
+   "files": {
+    ".ssh/d/a.conf": "Host top\n",
+    ".ssh/d/x/y/b.conf": "Host deep\n",
+    ".ssh/config": "Include d/**/*.conf\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "  a.conf (1)  \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ top  ║\n╚═════╧══════╝\n  b.conf (1)  \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ deep ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-equals-form",
+   "files": {
+    ".ssh/other": "Host o\n",
+    ".ssh/config": "Include=other\nHost m\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "include-in-host-block",
+   "files": {
+    ".ssh/other": "Host o\n",
+    ".ssh/config": "Host m\n  Include other\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\n  other (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ o    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "groups-jump-across-files",
+   "files": {
+    ".ssh/config.d/10-dev": "Host dev-1\nHost jump-dev\n",
+    ".ssh/config.d/20-only-jump": "Host JUMP-x\n",
+    ".ssh/config": "Host web-1\nHost jump-prod\nInclude config.d/*\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "   Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ web-1 ║\n╚═════╧═══════╝\n  10-dev (1)   \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 2   │ dev-1 ║\n╚═════╧═══════╝\n          JUMP-HOSTS (3)          \n╔═════╤═══════════╤══════════════╗\n║ No. │ Host      │ Group        ║\n╟─────┼───────────┼──────────────╢\n║ 3   │ jump-prod │ Main         ║\n║ 4   │ jump-dev  │ 10-dev       ║\n║ 5   │ JUMP-x    │ 20-only-jump ║\n╚═════╧═══════════╧══════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "groups-same-basename",
+   "files": {
+    ".ssh/a/hosts": "Host a1\nHost m1\n",
+    ".ssh/b/hosts": "Host b1\n",
+    ".ssh/Main": "Host main-file\n",
+    ".ssh/config": "Host m1\nInclude a/hosts b/hosts Main\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "     Main (2)      \n╔═════╤═══════════╗\n║ No. │ Host      ║\n╟─────┼───────────╢\n║ 1   │ m1        ║\n║ 2   │ main-file ║\n╚═════╧═══════════╝\n  hosts (3)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 3   │ a1   ║\n║ 4   │ m1   ║\n║ 5   │ b1   ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "groups-long-title",
+   "files": {
+    ".ssh/config.d/a-very-long-include-file-name-for-wrapping.conf": "Host x\n",
+    ".ssh/config": "Include config.d/*\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "a-very-long-in\nclude-file-nam\ne-for-wrapping\n  .conf (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ x    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "groups-long-title-spaces",
+   "files": {
+    ".ssh/config.d/a b c d e f": "Host x\n",
+    ".ssh/config": "Include config.d/*\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": " a b c d e f  \n     (1)      \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ x    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "unix-permission-denied",
+   "files": {
+    ".ssh/locked": "Host secret\n",
+    ".ssh/config": "Host m\nInclude locked\n"
+   },
+   "stdin": "q\n",
+   "modes": {
+    ".ssh/locked": 0
+   },
+   "unix_only": true,
+   "expected": {
+    "stdout": "Error reading or parsing SSH config file: [Errno 13] Permission denied: '<HOME>/.ssh/locked'\n   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "unix-symlinked-config",
+   "files": {
+    "dotfiles/ssh/config": "Host linked\nInclude extra\n",
+    "dotfiles/ssh/extra": "Host beside-target\n"
+   },
+   "stdin": "q\n",
+   "symlinks": {
+    ".ssh/config": "../dotfiles/ssh/config"
+   },
+   "unix_only": true,
+   "expected": {
+    "stdout": "    Main (1)    \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 1   │ linked ║\n╚═════╧════════╝\n       extra (1)       \n╔═════╤═══════════════╗\n║ No. │ Host          ║\n╟─────┼───────────────╢\n║ 2   │ beside-target ║\n╚═════╧═══════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-long-host-80",
+   "files": {
+    ".ssh/config": "Host aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nHost short\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "                                    Main (2)                                    \n╔═════╤════════════════════════════════════════════════════════════════════════╗\n║ No. │ Host                                                                   ║\n╟─────┼────────────────────────────────────────────────────────────────────────╢\n║ 1   │ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… ║\n║ 2   │ short                                                                  ║\n╚═════╧════════════════════════════════════════════════════════════════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-long-host-30",
+   "files": {
+    ".ssh/config": "Host aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nHost short\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "COLUMNS": "30"
+   },
+   "expected": {
+    "stdout": "           Main (2)           \n╔═════╤══════════════════════╗\n║ No. │ Host                 ║\n╟─────┼──────────────────────╢\n║ 1   │ aaaaaaaaaaaaaaaaaaa… ║\n║ 2   │ short                ║\n╚═════╧══════════════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-long-host-200",
+   "files": {
+    ".ssh/config": "Host aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nHost short\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "COLUMNS": "200"
+   },
+   "expected": {
+    "stdout": "                                                             Main (2)                                                             \n╔═════╤══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗\n║ No. │ Host                                                                                                                     ║\n╟─────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╢\n║ 1   │ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ║\n║ 2   │ short                                                                                                                    ║\n╚═════╧══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-jump-30",
+   "files": {
+    ".ssh/config": "Host jump-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "COLUMNS": "30"
+   },
+   "expected": {
+    "stdout": "        JUMP-HOSTS (1)        \n╔═════╤══════════════╤═══════╗\n║ No. │ Host         │ Group ║\n╟─────┼──────────────┼───────╢\n║ 1   │ jump-aaaaaa… │ Main  ║\n╚═════╧══════════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-jump-group-30",
+   "files": {
+    ".ssh/config.d/gggggggggggggggggggggggggggggggggggggggg": "Host jump-hhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\n",
+    ".ssh/config": "Include config.d/*\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "COLUMNS": "30"
+   },
+   "expected": {
+    "stdout": "        JUMP-HOSTS (1)        \n╔═════╤══════════╤═══════════╗\n║ No. │ Host     │ Group     ║\n╟─────┼──────────┼───────────╢\n║ 1   │ jump-hh… │ gggggggg… ║\n╚═════╧══════════╧═══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-hangul-30",
+   "files": {
+    ".ssh/config": "Host 한한한한한한한한한한한한한한한한한한한한\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "COLUMNS": "30"
+   },
+   "expected": {
+    "stdout": "           Main (1)           \n╔═════╤══════════════════════╗\n║ No. │ Host                 ║\n╟─────┼──────────────────────╢\n║ 1   │ 한한한한한한한한한 … ║\n╚═════╧══════════════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-many-hosts",
+   "files": {
+    ".ssh/config": "Host host-1\nHost host-2\nHost host-3\nHost host-4\nHost host-5\nHost host-6\nHost host-7\nHost host-8\nHost host-9\nHost host-10\nHost host-11\nHost host-12\nHost host-13\nHost host-14\nHost host-15\nHost host-16\nHost host-17\nHost host-18\nHost host-19\nHost host-20\nHost host-21\nHost host-22\nHost host-23\nHost host-24\nHost host-25\nHost host-26\nHost host-27\nHost host-28\nHost host-29\nHost host-30\nHost host-31\nHost host-32\nHost host-33\nHost host-34\nHost host-35\nHost host-36\nHost host-37\nHost host-38\nHost host-39\nHost host-40\nHost host-41\nHost host-42\nHost host-43\nHost host-44\nHost host-45\nHost host-46\nHost host-47\nHost host-48\nHost host-49\nHost host-50\nHost host-51\nHost host-52\nHost host-53\nHost host-54\nHost host-55\nHost host-56\nHost host-57\nHost host-58\nHost host-59\nHost host-60\nHost host-61\nHost host-62\nHost host-63\nHost host-64\nHost host-65\nHost host-66\nHost host-67\nHost host-68\nHost host-69\nHost host-70\nHost host-71\nHost host-72\nHost host-73\nHost host-74\nHost host-75\nHost host-76\nHost host-77\nHost host-78\nHost host-79\nHost host-80\nHost host-81\nHost host-82\nHost host-83\nHost host-84\nHost host-85\nHost host-86\nHost host-87\nHost host-88\nHost host-89\nHost host-90\nHost host-91\nHost host-92\nHost host-93\nHost host-94\nHost host-95\nHost host-96\nHost host-97\nHost host-98\nHost host-99\nHost host-100\nHost host-101\nHost host-102\nHost host-103\nHost host-104\nHost host-105\nHost host-106\nHost host-107\nHost host-108\nHost host-109\nHost host-110\nHost host-111\nHost host-112\nHost host-113\nHost host-114\nHost host-115\nHost host-116\nHost host-117\nHost host-118\nHost host-119\nHost host-120\n"
+   },
+   "stdin": "q\n",
+   "expected": {
+    "stdout": "    Main (120)    \n╔═════╤══════════╗\n║ No. │ Host     ║\n╟─────┼──────────╢\n║ 1   │ host-1   ║\n║ 2   │ host-2   ║\n║ 3   │ host-3   ║\n║ 4   │ host-4   ║\n║ 5   │ host-5   ║\n║ 6   │ host-6   ║\n║ 7   │ host-7   ║\n║ 8   │ host-8   ║\n║ 9   │ host-9   ║\n║ 10  │ host-10  ║\n║ 11  │ host-11  ║\n║ 12  │ host-12  ║\n║ 13  │ host-13  ║\n║ 14  │ host-14  ║\n║ 15  │ host-15  ║\n║ 16  │ host-16  ║\n║ 17  │ host-17  ║\n║ 18  │ host-18  ║\n║ 19  │ host-19  ║\n║ 20  │ host-20  ║\n║ 21  │ host-21  ║\n║ 22  │ host-22  ║\n║ 23  │ host-23  ║\n║ 24  │ host-24  ║\n║ 25  │ host-25  ║\n║ 26  │ host-26  ║\n║ 27  │ host-27  ║\n║ 28  │ host-28  ║\n║ 29  │ host-29  ║\n║ 30  │ host-30  ║\n║ 31  │ host-31  ║\n║ 32  │ host-32  ║\n║ 33  │ host-33  ║\n║ 34  │ host-34  ║\n║ 35  │ host-35  ║\n║ 36  │ host-36  ║\n║ 37  │ host-37  ║\n║ 38  │ host-38  ║\n║ 39  │ host-39  ║\n║ 40  │ host-40  ║\n║ 41  │ host-41  ║\n║ 42  │ host-42  ║\n║ 43  │ host-43  ║\n║ 44  │ host-44  ║\n║ 45  │ host-45  ║\n║ 46  │ host-46  ║\n║ 47  │ host-47  ║\n║ 48  │ host-48  ║\n║ 49  │ host-49  ║\n║ 50  │ host-50  ║\n║ 51  │ host-51  ║\n║ 52  │ host-52  ║\n║ 53  │ host-53  ║\n║ 54  │ host-54  ║\n║ 55  │ host-55  ║\n║ 56  │ host-56  ║\n║ 57  │ host-57  ║\n║ 58  │ host-58  ║\n║ 59  │ host-59  ║\n║ 60  │ host-60  ║\n║ 61  │ host-61  ║\n║ 62  │ host-62  ║\n║ 63  │ host-63  ║\n║ 64  │ host-64  ║\n║ 65  │ host-65  ║\n║ 66  │ host-66  ║\n║ 67  │ host-67  ║\n║ 68  │ host-68  ║\n║ 69  │ host-69  ║\n║ 70  │ host-70  ║\n║ 71  │ host-71  ║\n║ 72  │ host-72  ║\n║ 73  │ host-73  ║\n║ 74  │ host-74  ║\n║ 75  │ host-75  ║\n║ 76  │ host-76  ║\n║ 77  │ host-77  ║\n║ 78  │ host-78  ║\n║ 79  │ host-79  ║\n║ 80  │ host-80  ║\n║ 81  │ host-81  ║\n║ 82  │ host-82  ║\n║ 83  │ host-83  ║\n║ 84  │ host-84  ║\n║ 85  │ host-85  ║\n║ 86  │ host-86  ║\n║ 87  │ host-87  ║\n║ 88  │ host-88  ║\n║ 89  │ host-89  ║\n║ 90  │ host-90  ║\n║ 91  │ host-91  ║\n║ 92  │ host-92  ║\n║ 93  │ host-93  ║\n║ 94  │ host-94  ║\n║ 95  │ host-95  ║\n║ 96  │ host-96  ║\n║ 97  │ host-97  ║\n║ 98  │ host-98  ║\n║ 99  │ host-99  ║\n║ 100 │ host-100 ║\n║ 101 │ host-101 ║\n║ 102 │ host-102 ║\n║ 103 │ host-103 ║\n║ 104 │ host-104 ║\n║ 105 │ host-105 ║\n║ 106 │ host-106 ║\n║ 107 │ host-107 ║\n║ 108 │ host-108 ║\n║ 109 │ host-109 ║\n║ 110 │ host-110 ║\n║ 111 │ host-111 ║\n║ 112 │ host-112 ║\n║ 113 │ host-113 ║\n║ 114 │ host-114 ║\n║ 115 │ host-115 ║\n║ 116 │ host-116 ║\n║ 117 │ host-117 ║\n║ 118 │ host-118 ║\n║ 119 │ host-119 ║\n║ 120 │ host-120 ║\n╚═════╧══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-columns-and-lines",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "COLUMNS": "40",
+    "LINES": "10"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "width-columns-not-number",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "COLUMNS": "wide"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-force",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "nope\nq\n",
+   "env": {
+    "FORCE_COLOR": "1"
+   },
+   "expected": {
+    "stdout": "\u001b[3m   \u001b[0m\u001b[1;3;36mMain (3)\u001b[0m\u001b[3m    \u001b[0m\n\u001b[36m╔═════╤═══════╗\u001b[0m\n\u001b[36m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[36m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost \u001b[0m\u001b[1m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╟─────┼───────╢\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m1  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35malpha\u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m2  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mbeta \u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m3  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mgamma\u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╚═════╧═══════╝\u001b[0m\n\u001b[3m     \u001b[0m\u001b[1;3;33mJUMP-HOSTS (1)\u001b[0m\u001b[3m     \u001b[0m\n\u001b[33m╔═════╤════════╤═══════╗\u001b[0m\n\u001b[33m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[33m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost  \u001b[0m\u001b[1m \u001b[0m\u001b[33m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mGroup\u001b[0m\u001b[1m \u001b[0m\u001b[33m║\u001b[0m\n\u001b[33m╟─────┼────────┼───────╢\u001b[0m\n\u001b[33m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m4  \u001b[0m\u001b[36m \u001b[0m\u001b[33m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mjump-a\u001b[0m\u001b[35m \u001b[0m\u001b[33m│\u001b[0m\u001b[32m \u001b[0m\u001b[32mMain \u001b[0m\u001b[32m \u001b[0m\u001b[33m║\u001b[0m\n\u001b[33m╚═════╧════════╧═══════╝\u001b[0m\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Invalid input. Please enter a number, host name, 'q', or 'f'.\n\u001b[3m   \u001b[0m\u001b[1;3;36mMain (3)\u001b[0m\u001b[3m    \u001b[0m\n\u001b[36m╔═════╤═══════╗\u001b[0m\n\u001b[36m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[36m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost \u001b[0m\u001b[1m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╟─────┼───────╢\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m1  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35malpha\u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m2  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mbeta \u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m3  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mgamma\u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╚═════╧═══════╝\u001b[0m\n\u001b[3m     \u001b[0m\u001b[1;3;33mJUMP-HOSTS (1)\u001b[0m\u001b[3m     \u001b[0m\n\u001b[33m╔═════╤════════╤═══════╗\u001b[0m\n\u001b[33m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[33m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost  \u001b[0m\u001b[1m \u001b[0m\u001b[33m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mGroup\u001b[0m\u001b[1m \u001b[0m\u001b[33m║\u001b[0m\n\u001b[33m╟─────┼────────┼───────╢\u001b[0m\n\u001b[33m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m4  \u001b[0m\u001b[36m \u001b[0m\u001b[33m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mjump-a\u001b[0m\u001b[35m \u001b[0m\u001b[33m│\u001b[0m\u001b[32m \u001b[0m\u001b[32mMain \u001b[0m\u001b[32m \u001b[0m\u001b[33m║\u001b[0m\n\u001b[33m╚═════╧════════╧═══════╝\u001b[0m\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-force-empty",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "FORCE_COLOR": ""
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-force-no-color",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "FORCE_COLOR": "1",
+    "NO_COLOR": "1"
+   },
+   "expected": {
+    "stdout": "\u001b[3m   \u001b[0m\u001b[1;3mMain (3)\u001b[0m\u001b[3m    \u001b[0m\n╔═════╤═══════╗\n║\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m│\u001b[1m \u001b[0m\u001b[1mHost \u001b[0m\u001b[1m \u001b[0m║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n\u001b[3m     \u001b[0m\u001b[1;3mJUMP-HOSTS (1)\u001b[0m\u001b[3m     \u001b[0m\n╔═════╤════════╤═══════╗\n║\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m│\u001b[1m \u001b[0m\u001b[1mHost  \u001b[0m\u001b[1m \u001b[0m│\u001b[1m \u001b[0m\u001b[1mGroup\u001b[0m\u001b[1m \u001b[0m║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-force-dumb",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "FORCE_COLOR": "1",
+    "TERM": "dumb"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-force-dumb-columns",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "FORCE_COLOR": "1",
+    "TERM": "dumb",
+    "COLUMNS": "30"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-tty-compatible",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "TTY_COMPATIBLE": "1"
+   },
+   "expected": {
+    "stdout": "\u001b[3m   \u001b[0m\u001b[1;3;36mMain (3)\u001b[0m\u001b[3m    \u001b[0m\n\u001b[36m╔═════╤═══════╗\u001b[0m\n\u001b[36m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[36m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost \u001b[0m\u001b[1m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╟─────┼───────╢\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m1  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35malpha\u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m2  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mbeta \u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m3  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mgamma\u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╚═════╧═══════╝\u001b[0m\n\u001b[3m     \u001b[0m\u001b[1;3;33mJUMP-HOSTS (1)\u001b[0m\u001b[3m     \u001b[0m\n\u001b[33m╔═════╤════════╤═══════╗\u001b[0m\n\u001b[33m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[33m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost  \u001b[0m\u001b[1m \u001b[0m\u001b[33m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mGroup\u001b[0m\u001b[1m \u001b[0m\u001b[33m║\u001b[0m\n\u001b[33m╟─────┼────────┼───────╢\u001b[0m\n\u001b[33m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m4  \u001b[0m\u001b[36m \u001b[0m\u001b[33m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mjump-a\u001b[0m\u001b[35m \u001b[0m\u001b[33m│\u001b[0m\u001b[32m \u001b[0m\u001b[32mMain \u001b[0m\u001b[32m \u001b[0m\u001b[33m║\u001b[0m\n\u001b[33m╚═════╧════════╧═══════╝\u001b[0m\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-tty-compatible-off",
+   "files": {
+    ".ssh/config": "Host alpha\n  HostName 10.0.0.1\nHost beta gamma\nHost jump-a\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "TTY_COMPATIBLE": "0",
+    "FORCE_COLOR": "1"
+   },
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-force-long-title",
+   "files": {
+    ".ssh/config.d/a-very-long-include-file-name-for-wrapping.conf": "Host x\n",
+    ".ssh/config": "Include config.d/*\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "FORCE_COLOR": "1"
+   },
+   "expected": {
+    "stdout": "\u001b[1;3;36ma-very-long-in\u001b[0m\n\u001b[1;3;36mclude-file-nam\u001b[0m\n\u001b[1;3;36me-for-wrapping\u001b[0m\n\u001b[3m  \u001b[0m\u001b[1;3;36m.conf (1)\u001b[0m\u001b[3m   \u001b[0m\n\u001b[36m╔═════╤══════╗\u001b[0m\n\u001b[36m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[36m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost\u001b[0m\u001b[1m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╟─────┼──────╢\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m1  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35mx   \u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╚═════╧══════╝\u001b[0m\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  {
+   "name": "color-force-truncated",
+   "files": {
+    ".ssh/config": "Host aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+   },
+   "stdin": "q\n",
+   "env": {
+    "FORCE_COLOR": "1",
+    "COLUMNS": "30"
+   },
+   "expected": {
+    "stdout": "\u001b[3m           \u001b[0m\u001b[1;3;36mMain (1)\u001b[0m\u001b[3m           \u001b[0m\n\u001b[36m╔═════╤══════════════════════╗\u001b[0m\n\u001b[36m║\u001b[0m\u001b[1m \u001b[0m\u001b[1mNo.\u001b[0m\u001b[1m \u001b[0m\u001b[36m│\u001b[0m\u001b[1m \u001b[0m\u001b[1mHost                \u001b[0m\u001b[1m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╟─────┼──────────────────────╢\u001b[0m\n\u001b[36m║\u001b[0m\u001b[36m \u001b[0m\u001b[36m1  \u001b[0m\u001b[36m \u001b[0m\u001b[36m│\u001b[0m\u001b[35m \u001b[0m\u001b[35maaaaaaaaaaaaaaaaaaa…\u001b[0m\u001b[35m \u001b[0m\u001b[36m║\u001b[0m\n\u001b[36m╚═════╧══════════════════════╝\u001b[0m\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  }
+ ]
+}

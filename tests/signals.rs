@@ -1,0 +1,140 @@
+//! Ctrl-C handling, checked by sending SIGINT to the process.
+#![cfg(unix)]
+
+mod common;
+
+use common::Sandbox;
+use std::io::{Read, Write};
+use std::process::{Child, Command, Stdio};
+use std::time::{Duration, Instant};
+
+fn sigint(child: &Child) {
+    let ok = Command::new("kill")
+        .arg("-INT")
+        .arg(child.id().to_string())
+        .status()
+        .unwrap();
+    assert!(ok.success());
+}
+
+/// Read from `stream` until `needle` shows up, so the signal lands at a
+/// known point.
+fn read_until(stream: &mut impl Read, needle: &str) -> String {
+    let mut seen = Vec::new();
+    let mut buf = [0u8; 4096];
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !String::from_utf8_lossy(&seen).contains(needle) {
+        assert!(
+            Instant::now() < deadline,
+            "timed out waiting for {needle:?}"
+        );
+        let n = stream.read(&mut buf).unwrap();
+        assert!(n > 0, "stream closed before {needle:?}");
+        seen.extend_from_slice(&buf[..n]);
+    }
+    String::from_utf8(seen).unwrap()
+}
+
+fn wait_for(child: &mut Child, needle: &str) -> String {
+    read_until(child.stdout.as_mut().unwrap(), needle)
+}
+
+/// Wait until the fake ssh has started: it prints its argv to stderr first.
+/// From then on ssh-connector is waiting on it, so a signal has a fixed
+/// target instead of depending on a sleep.
+fn wait_for_ssh(child: &mut Child) -> String {
+    read_until(child.stderr.as_mut().unwrap(), "fake-ssh argv=")
+}
+
+fn finish(mut child: Child, mut seen: String, mut err: String) -> (String, String, i32) {
+    let mut rest = String::new();
+    child
+        .stdout
+        .take()
+        .unwrap()
+        .read_to_string(&mut rest)
+        .unwrap();
+    seen.push_str(&rest);
+    child
+        .stderr
+        .take()
+        .unwrap()
+        .read_to_string(&mut err)
+        .unwrap();
+    let code = child.wait().unwrap().code().unwrap_or(-1);
+    (seen, err, code)
+}
+
+#[test]
+fn interrupt_at_prompt_exits_130() {
+    let sb = Sandbox::new(true);
+    sb.write(".ssh/config", b"Host alpha\n");
+    let mut child = sb
+        .command()
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let seen = wait_for(&mut child, "'f' to filter): ");
+    std::thread::sleep(Duration::from_millis(100));
+    sigint(&child);
+    let (_, err, code) = finish(child, seen, String::new());
+    assert_eq!(err, "\n");
+    assert_eq!(code, 130);
+}
+
+#[test]
+fn interrupt_while_ssh_runs_stops_ssh_and_exits_130() {
+    let sb = Sandbox::new(true);
+    sb.write(".ssh/config", b"Host alpha\n");
+    let mut child = sb
+        .command()
+        .env("FAKE_SSH_SLEEP_MS", "5000")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.stdin.as_mut().unwrap().write_all(b"1\n").unwrap();
+    let seen = wait_for(&mut child, "Connecting to alpha...\n");
+    let err = wait_for_ssh(&mut child);
+    let start = Instant::now();
+    sigint(&child);
+    let (out, _, code) = finish(child, seen, err);
+    assert!(
+        start.elapsed() < Duration::from_secs(3),
+        "ssh was not stopped"
+    );
+    assert!(
+        out.ends_with("Connecting to alpha...\n\nExiting.\n"),
+        "{out:?}"
+    );
+    assert_eq!(code, 130);
+}
+
+#[test]
+fn ssh_killed_by_a_signal_exits_with_128_plus_signal() {
+    let sb = Sandbox::new(true);
+    sb.write(".ssh/config", b"Host alpha\n");
+    let mut child = sb
+        .command()
+        .env("FAKE_SSH_SLEEP_MS", "5000")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.stdin.as_mut().unwrap().write_all(b"1\n").unwrap();
+    let seen = wait_for(&mut child, "Connecting to alpha...\n");
+    let err = wait_for_ssh(&mut child);
+    // Terminate only ssh (the fake), not ssh-connector.
+    let ok = Command::new("pkill")
+        .args(["-TERM", "-P", &child.id().to_string()])
+        .status()
+        .unwrap();
+    assert!(ok.success());
+    let (out, _, code) = finish(child, seen, err);
+    assert!(out.ends_with("SSH session for alpha ended.\n"), "{out:?}");
+    assert_eq!(code, 128 + 15);
+}
