@@ -30,9 +30,9 @@ fn out_err(_: io::Error) -> Exit {
     Exit(1)
 }
 
-/// Install the Ctrl-C handler. At the prompt Python's click turned Ctrl-C
-/// into "Aborted!" and exit 1; while ssh ran, the interrupt reached Python as
-/// KeyboardInterrupt; anywhere else click printed a blank line first.
+/// Install the Ctrl-C handler. While ssh runs it only takes note (ssh gets
+/// the same Ctrl-C and decides for itself); anywhere else it ends the program
+/// with 130, the shell's code for "interrupted", after moving to a new line.
 ///
 /// The handler must not touch stdout: the main thread holds its lock for the
 /// whole run. Everything written so far has already been flushed, because
@@ -40,16 +40,15 @@ fn out_err(_: io::Error) -> Exit {
 pub fn install_interrupt_handler() {
     let _ = ctrlc::set_handler(|| match MODE.load(Ordering::SeqCst) {
         MODE_CHILD => INTERRUPTED.store(true, Ordering::SeqCst),
-        MODE_PROMPT => {
-            let _ = writeln!(io::stderr(), "Aborted!");
-            std::process::exit(1);
-        }
         _ => {
-            let _ = write!(io::stderr(), "\nAborted!\n");
-            std::process::exit(1);
+            let _ = writeln!(io::stderr());
+            std::process::exit(INTERRUPTED_EXIT);
         }
     });
 }
+
+/// 128 + SIGINT.
+const INTERRUPTED_EXIT: i32 = 130;
 
 struct Out<'a> {
     term: &'a Term,
@@ -72,9 +71,9 @@ impl Out<'_> {
     }
 }
 
-/// Read one line for a click prompt. Empty answers ask again; end of input is
-/// click's `Abort`.
-fn prompt(out: &mut Out, text: &str) -> Res<String> {
+/// Read one line for a prompt. Empty answers ask again. `None` is the end of
+/// input (Ctrl-D), which quits like `q`.
+fn prompt(out: &mut Out, text: &str) -> Res<Option<String>> {
     loop {
         write!(out.w, "{text}").map_err(out_err)?;
         out.flush()?;
@@ -83,11 +82,12 @@ fn prompt(out: &mut Out, text: &str) -> Res<String> {
         let n = io::stdin().lock().read_line(&mut buf);
         MODE.store(MODE_OTHER, Ordering::SeqCst);
         match n {
-            Ok(0) | Err(_) => {
-                eprintln!("Aborted!");
+            Ok(0) => return Ok(None),
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("Error: could not read input: {e}");
                 return Err(Exit(1));
             }
-            Ok(_) => {}
         }
         if buf.ends_with('\n') {
             buf.pop();
@@ -96,7 +96,7 @@ fn prompt(out: &mut Out, text: &str) -> Res<String> {
             }
         }
         if !buf.is_empty() {
-            return Ok(buf);
+            return Ok(Some(buf));
         }
     }
 }
@@ -239,14 +239,21 @@ pub fn run(term: &Term) -> Res<i32> {
             continue;
         }
 
-        let choice = prompt(&mut out, PROMPT)?;
+        let Some(choice) = prompt(&mut out, PROMPT)? else {
+            out.click_plain("\nExiting.")?;
+            return Ok(0);
+        };
         let lowered = choice.to_lowercase();
         if lowered == "q" {
             out.click_plain("Exiting.")?;
             return Ok(0);
         }
         if lowered == "f" {
-            filter = prompt(&mut out, FILTER_PROMPT)?;
+            let Some(term) = prompt(&mut out, FILTER_PROMPT)? else {
+                out.click_plain("\nExiting.")?;
+                return Ok(0);
+            };
+            filter = term;
             continue;
         }
 
@@ -291,7 +298,8 @@ fn connect(out: &mut Out, host: &str) -> Res<i32> {
         Ok(c) => c,
         Err(e) if e.kind() == io::ErrorKind::NotFound => {
             MODE.store(MODE_OTHER, Ordering::SeqCst);
-            let message = "Error: 'ssh' command not found. Is OpenSSH client installed and in your PATH?";
+            let message =
+                "Error: 'ssh' command not found. Is OpenSSH client installed and in your PATH?";
             let _ = writeln!(io::stderr(), "{}", out.term.click_err(message, Color::Red));
             // 127: the shell's code for "command not found".
             return Ok(127);
@@ -306,9 +314,8 @@ fn connect(out: &mut Out, host: &str) -> Res<i32> {
     let status = wait_child(&mut child);
     MODE.store(MODE_OTHER, Ordering::SeqCst);
     if INTERRUPTED.load(Ordering::SeqCst) {
-        // KeyboardInterrupt reached Python while ssh ran.
         out.click_plain("\nExiting.")?;
-        return Ok(0);
+        return Ok(INTERRUPTED_EXIT);
     }
     let code = status.map(exit_code).unwrap_or(1);
     if code != 0 {

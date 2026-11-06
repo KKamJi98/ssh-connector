@@ -1,5 +1,23 @@
 {
  "cases": {
+  "filter-eof": {
+   "bug": "3.3",
+   "reason": "end of input quits like q (Exiting., exit 0); Ctrl-C exits 130 instead of Aborted! and 1",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term: \nExiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "pick-eof": {
+   "bug": "3.3",
+   "reason": "end of input quits like q (Exiting., exit 0); Ctrl-C exits 130 instead of Aborted! and 1",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): \nExiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "ssh-exit-1": {
    "bug": "3.1",
    "reason": "ssh's exit code is passed through instead of always exiting 0",

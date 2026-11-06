@@ -1,5 +1,4 @@
-//! Ctrl-C handling, checked by sending SIGINT to the process. The expected
-//! behaviour is what the Python version did (see docs/rust-migration.md).
+//! Ctrl-C handling, checked by sending SIGINT to the process.
 #![cfg(unix)]
 
 mod common;
@@ -57,7 +56,7 @@ fn finish(mut child: Child, mut seen: String) -> (String, String, i32) {
 }
 
 #[test]
-fn interrupt_at_prompt_aborts_with_exit_1() {
+fn interrupt_at_prompt_exits_130() {
     let sb = Sandbox::new(true);
     sb.write(".ssh/config", b"Host alpha\n");
     let mut child = sb
@@ -71,12 +70,12 @@ fn interrupt_at_prompt_aborts_with_exit_1() {
     std::thread::sleep(Duration::from_millis(100));
     sigint(&child);
     let (_, err, code) = finish(child, seen);
-    assert_eq!(err, "Aborted!\n");
-    assert_eq!(code, 1);
+    assert_eq!(err, "\n");
+    assert_eq!(code, 130);
 }
 
 #[test]
-fn interrupt_while_ssh_runs_stops_ssh_and_exits_0() {
+fn interrupt_while_ssh_runs_stops_ssh_and_exits_130() {
     let sb = Sandbox::new(true);
     sb.write(".ssh/config", b"Host alpha\n");
     let mut child = sb
@@ -101,7 +100,7 @@ fn interrupt_while_ssh_runs_stops_ssh_and_exits_0() {
         out.ends_with("Connecting to alpha...\n\nExiting.\n"),
         "{out:?}"
     );
-    assert_eq!(code, 0);
+    assert_eq!(code, 130);
 }
 
 #[test]
