@@ -88,25 +88,23 @@ pub fn is_ignored_host(host: &str) -> bool {
     lowered.ends_with("-ignore") || lowered.contains("github") || lowered.contains("bitbucket")
 }
 
-/// `re.match(r"^<kw>\b", line, re.IGNORECASE)`.
-fn starts_with_keyword(line: &str, keyword: &str) -> bool {
-    let Some(head) = line.get(..keyword.len()) else {
-        return false;
-    };
-    if !head.eq_ignore_ascii_case(keyword) {
-        return false;
-    }
-    match line[keyword.len()..].chars().next() {
-        None => true,
-        Some(c) => !(c.is_alphanumeric() || c == '_'),
-    }
+/// Split a config line into its keyword and the rest, as OpenSSH does: the
+/// keyword ends at whitespace or '=', and one '=' may stand between the
+/// keyword and its arguments (`Host=web`, `Host = web`).
+fn split_keyword(line: &str) -> (&str, &str) {
+    let end = line
+        .find(|c: char| c.is_whitespace() || c == '=')
+        .unwrap_or(line.len());
+    let (keyword, rest) = line.split_at(end);
+    let rest = rest.trim_start();
+    let rest = rest.strip_prefix('=').unwrap_or(rest).trim_start();
+    (keyword, rest)
 }
 
 /// The arguments after the keyword. As in ssh_config, a word that starts
 /// with '#' begins a comment that runs to the end of the line.
-fn arguments(line: &str) -> impl Iterator<Item = &str> {
-    line.split_whitespace()
-        .skip(1)
+fn arguments(rest: &str) -> impl Iterator<Item = &str> {
+    rest.split_whitespace()
         .take_while(|word| !word.starts_with('#'))
 }
 
@@ -331,15 +329,16 @@ impl Parser {
             if line.is_empty() || line.starts_with('#') {
                 continue;
             }
-            if starts_with_keyword(line, "Include") {
-                let parts: Vec<String> = arguments(line).map(String::from).collect();
+            let (keyword, rest) = split_keyword(line);
+            if keyword.eq_ignore_ascii_case("Include") {
+                let parts: Vec<String> = arguments(rest).map(String::from).collect();
                 if !parts.is_empty() {
                     includes.push(parts);
                 }
                 continue;
             }
-            if starts_with_keyword(line, "Host") {
-                for value in arguments(line) {
+            if keyword.eq_ignore_ascii_case("Host") {
+                for value in arguments(rest) {
                     // '*' and '?' make a pattern, not a host name. A name
                     // starting with '-' would reach ssh as an option. A
                     // negated pattern ('!name') matches no host by itself.
@@ -495,19 +494,21 @@ mod tests {
     }
 
     #[test]
-    fn keyword_needs_word_boundary() {
-        assert!(starts_with_keyword("Host foo", "Host"));
-        assert!(starts_with_keyword("HOST\tfoo", "Host"));
-        assert!(starts_with_keyword("Host=foo", "Host"));
-        assert!(!starts_with_keyword("HostName foo", "Host"));
-        assert!(!starts_with_keyword("Hos", "Host"));
+    fn keyword_split_like_openssh() {
+        assert_eq!(split_keyword("Host foo"), ("Host", "foo"));
+        assert_eq!(split_keyword("HOST\tfoo bar"), ("HOST", "foo bar"));
+        assert_eq!(split_keyword("Host=foo"), ("Host", "foo"));
+        assert_eq!(split_keyword("Host = foo"), ("Host", "foo"));
+        assert_eq!(split_keyword("HostName foo").0, "HostName");
+        assert_eq!(split_keyword("Host-foo bar").0, "Host-foo");
+        assert_eq!(split_keyword("Host"), ("Host", ""));
     }
 
     #[test]
     fn comment_ends_the_arguments() {
-        let v: Vec<&str> = arguments("Host a b # c d").collect();
+        let v: Vec<&str> = arguments("a b # c d").collect();
         assert_eq!(v, vec!["a", "b"]);
-        let v: Vec<&str> = arguments("Host a#b").collect();
+        let v: Vec<&str> = arguments("a#b").collect();
         assert_eq!(v, vec!["a#b"]);
     }
 

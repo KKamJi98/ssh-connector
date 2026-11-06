@@ -1,5 +1,14 @@
 {
  "cases": {
+  "config-keyword-forms": {
+   "bug": "3.8",
+   "reason": "'Keyword=value' lines (Host=web, Include=file) are read as ssh does",
+   "expected": {
+    "stdout": "     Main (5)     \n╔═════╤══════════╗\n║ No. │ Host     ║\n╟─────┼──────────╢\n║ 1   │ lower    ║\n║ 2   │ upper    ║\n║ 3   │ indented ║\n║ 4   │ tabbed   ║\n║ 5   │ eq       ║\n╚═════╧══════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "config-trailing-comment": {
    "bug": "3.7",
    "reason": "a word starting with '#' starts a comment, as in ssh_config",
@@ -42,6 +51,15 @@
    "expected": {
     "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term:    Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ gamma ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to gamma...\n",
     "stderr": "fake-ssh argv=[\"--\", \"gamma\"]\n",
+    "code": 0
+   }
+  },
+  "include-equals-form": {
+   "bug": "3.8",
+   "reason": "'Keyword=value' lines (Host=web, Include=file) are read as ssh does",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\n  other (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ o    ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
     "code": 0
    }
   },
