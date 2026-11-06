@@ -163,8 +163,8 @@ pub fn run(term: &Term) -> Res<i32> {
     let stdout: io::StdoutLock<'static> = io::stdout().lock();
     let mut out = Out { term, w: stdout };
 
-    let (groups, errors) = match config::default_config_path() {
-        Some(p) => config::grouped_hosts(&p),
+    let (groups, errors) = match config::user_dir() {
+        Some(dir) => config::grouped_hosts(&dir.join("config"), &dir),
         None => (Groups::default(), Vec::new()),
     };
     for e in &errors {

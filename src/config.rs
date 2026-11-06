@@ -56,8 +56,9 @@ pub fn home_dir() -> Option<PathBuf> {
     }
 }
 
-pub fn default_config_path() -> Option<PathBuf> {
-    home_dir().map(|h| h.join(".ssh").join("config"))
+/// `~/.ssh`.
+pub fn user_dir() -> Option<PathBuf> {
+    home_dir().map(|h| h.join(".ssh"))
 }
 
 /// Python `os.path.expanduser` for `~` and `~/...`. `~user` is left as is.
@@ -291,20 +292,24 @@ fn canonical(p: &Path) -> std::io::Result<PathBuf> {
 
 pub struct Parser {
     visited: HashSet<PathBuf>,
+    /// Where relative `Include` paths point: `~/.ssh` for a user config,
+    /// whichever file the `Include` sits in (ssh_config(5)).
+    user_dir: PathBuf,
     /// Error lines in the order Python printed them.
     pub errors: Vec<String>,
 }
 
 impl Parser {
-    fn new() -> Parser {
+    fn new(user_dir: &Path) -> Parser {
         Parser {
             visited: HashSet::new(),
+            user_dir: user_dir.to_path_buf(),
             errors: Vec::new(),
         }
     }
 
-    /// `_expand_include_patterns`: every match of every pattern on one
-    /// `Include` line, de-duplicated and sorted together.
+    /// Every match of every pattern on one `Include` line, de-duplicated and
+    /// sorted together (as the Python version did).
     fn expand_includes(patterns: &[String], base_dir: &Path) -> Vec<PathBuf> {
         let mut found = BTreeSet::new();
         let options = glob::MatchOptions {
@@ -348,10 +353,6 @@ impl Parser {
         if !self.visited.insert(real_path.clone()) || !real_path.is_file() {
             return Vec::new();
         }
-        let base_dir = real_path
-            .parent()
-            .map(Path::to_path_buf)
-            .unwrap_or_default();
 
         let bytes = match std::fs::read(&real_path) {
             Ok(b) => b,
@@ -403,7 +404,7 @@ impl Parser {
             }
         }
         for parts in includes {
-            for inc in Self::expand_includes(&parts, &base_dir) {
+            for inc in Self::expand_includes(&parts, &self.user_dir) {
                 hosts.extend(self.parse_file(&inc));
             }
         }
@@ -419,12 +420,12 @@ impl Parser {
 
 /// `get_ssh_hosts_grouped`: hosts grouped by source file ("Main" for the main
 /// config, the file name for included files). Also returns parse errors.
-pub fn grouped_hosts(config_path: &Path) -> (Groups, Vec<String>) {
+pub fn grouped_hosts(config_path: &Path, user_dir: &Path) -> (Groups, Vec<String>) {
     let mut groups = Groups::default();
     if !config_path.is_file() {
         return (groups, Vec::new());
     }
-    let mut parser = Parser::new();
+    let mut parser = Parser::new(user_dir);
     let entries = parser.parse_file(config_path);
     let main = canonical(config_path).ok();
     // (group, host) pairs already listed; a set keeps large configs linear.
@@ -462,7 +463,7 @@ pub fn hosts(config_path: &Path) -> Vec<String> {
     if !config_path.is_file() {
         return Vec::new();
     }
-    let mut parser = Parser::new();
+    let mut parser = Parser::new(config_path.parent().unwrap());
     let mut out: Vec<String> = Vec::new();
     for e in parser.parse_file(config_path) {
         if !is_ignored_host(&e.host) && !out.contains(&e.host) {
@@ -537,7 +538,10 @@ mod tests {
         );
         write(&ssh, "config.d/02-wild", "Host *.example.com\n");
         write(&ssh, "config.d/03-include-nested", "Include nested/*\n");
-        write(&ssh, "config.d/nested/10-nested-host", "Host nested1\n");
+        // A relative Include is relative to ~/.ssh, not to the file that
+        // holds it (ssh_config(5)). The Python test expected config.d/nested.
+        write(&ssh, "config.d/nested/10-not-read", "Host wrong-dir\n");
+        write(&ssh, "nested/10-nested-host", "Host nested1\n");
         assert_eq!(hosts(&cfg), vec!["base1", "inc1", "inc2", "nested1"]);
     }
 

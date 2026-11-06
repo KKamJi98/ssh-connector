@@ -72,6 +72,15 @@
     "code": 0
    }
   },
+  "include-nested-relative": {
+   "bug": "3.10",
+   "reason": "a relative Include is relative to ~/.ssh, as ssh_config(5) says, not to the including file",
+   "expected": {
+    "stdout": "   Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ base1 ║\n╚═════╧═══════╝\n    01 (1)    \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ inc1 ║\n╚═════╧══════╝\n           n (1)           \n╔═════╤═══════════════════╗\n║ No. │ Host              ║\n╟─────┼───────────────────╢\n║ 3   │ nested-rel-to-ssh ║\n╚═════╧═══════════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "pick-eof": {
    "bug": "3.3",
    "reason": "end of input quits like q (Exiting., exit 0); Ctrl-C exits 130 instead of Aborted! and 1",
@@ -187,6 +196,15 @@
     "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\n",
     "stderr": "Error: 'ssh' command not found. Is OpenSSH client installed and in your PATH?\n",
     "code": 127
+   }
+  },
+  "unix-symlinked-config": {
+   "bug": "3.10",
+   "reason": "a relative Include is relative to ~/.ssh, as ssh_config(5) says, not to the including file",
+   "expected": {
+    "stdout": "    Main (1)    \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 1   │ linked ║\n╚═════╧════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
    }
   }
  }
