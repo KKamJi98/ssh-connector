@@ -206,4 +206,9 @@ changes. Run `cargo clean` after a dry run, or give the dry run its own
   `--list`. It needs clap_complete's `unstable-dynamic` feature; the exact
   version is pinned by Cargo.lock. Homebrew installs it with
   `generate_completions_from_executable(..., shell_parameter_format: :clap)`.
+- The program name in usage and error text is fixed to `ssh-connector`
+  (`bin_name`). clap took it from argv[0] by default, so on Windows it read
+  `ssh-connector.exe` and the golden error cases failed on `windows-latest`
+  (CI run 42235363547). A renamed or symlinked binary now prints the same
+  text as well.
 - P2 and P3 ideas are in `docs/ROADMAP.md`.

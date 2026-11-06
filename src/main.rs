@@ -12,7 +12,12 @@ use std::process::ExitCode;
 
 /// A CLI tool to list hosts from ~/.ssh/config and connect to them.
 #[derive(Parser)]
-#[command(name = "ssh-connector", version, disable_help_subcommand = true)]
+#[command(
+    name = "ssh-connector",
+    bin_name = "ssh-connector",
+    version,
+    disable_help_subcommand = true
+)]
 struct Cli {
     /// Connect to QUERY if it is a host name; otherwise open the menu
     /// filtered by it
