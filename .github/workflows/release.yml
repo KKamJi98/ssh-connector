@@ -156,11 +156,13 @@ jobs:
 
   # The tap is shared with other KKamJi98 tools, so this touches one file and
   # retries on a non-fast-forward push. It authenticates with a deploy key that
-  # can write to the tap repository only; no PAT.
+  # can write to the tap repository only; no PAT. The key is a secret of the
+  # tag-only `release` environment, so no other job or ref can read it.
   homebrew:
     needs: [verify, github-release]
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment: release
     permissions: {}
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -177,14 +179,35 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          sum() { cut -d' ' -f1 "dist/${BIN}-${TAG}-$1.tar.gz.sha256"; }
-          url() { echo "https://github.com/${REPO}/releases/download/${TAG}/${BIN}-${TAG}-$1.tar.gz"; }
+          if [ -z "${DEPLOY_KEY}" ]; then
+            echo "::error::secret HOMEBREW_TAP_DEPLOY_KEY is not set"
+            exit 1
+          fi
 
-          key="$RUNNER_TEMP/tap_key"
-          (umask 077 && printf '%s\n' "$DEPLOY_KEY" > "$key")
+          # Read every checksum before writing the formula: a failing $(...)
+          # inside a heredoc does not stop the script, and would leave an
+          # empty sha256 in the formula.
+          sum() {
+            local s
+            s="$(cut -d' ' -f1 "dist/${BIN}-${TAG}-$1.tar.gz.sha256")"
+            if ! [[ "$s" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "::error::bad or missing checksum for $1" >&2
+              return 1
+            fi
+            printf '%s' "$s"
+          }
+          base="https://github.com/${REPO}/releases/download/${TAG}/${BIN}-${TAG}"
+          sha_mac_arm="$(sum aarch64-apple-darwin)"
+          sha_mac_intel="$(sum x86_64-apple-darwin)"
+          sha_linux_arm="$(sum aarch64-unknown-linux-musl)"
+          sha_linux_intel="$(sum x86_64-unknown-linux-musl)"
+
+          ssh_dir="$RUNNER_TEMP/tap-ssh"
+          (umask 077 && mkdir -p "$ssh_dir" && printf '%s\n' "$DEPLOY_KEY" > "$ssh_dir/key")
+          trap 'rm -rf "$ssh_dir"' EXIT
           # GitHub's published SSH host key (https://api.github.com/meta).
-          echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/known_hosts"
-          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes"
+          echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$ssh_dir/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $ssh_dir/key -o IdentitiesOnly=yes -o UserKnownHostsFile=$ssh_dir/known_hosts -o StrictHostKeyChecking=yes"
 
           git clone git@github.com:KKamJi98/homebrew-tap.git tap
           mkdir -p tap/Formula
@@ -197,23 +220,23 @@ jobs:
 
             on_macos do
               on_arm do
-                url "$(url aarch64-apple-darwin)"
-                sha256 "$(sum aarch64-apple-darwin)"
+                url "${base}-aarch64-apple-darwin.tar.gz"
+                sha256 "${sha_mac_arm}"
               end
               on_intel do
-                url "$(url x86_64-apple-darwin)"
-                sha256 "$(sum x86_64-apple-darwin)"
+                url "${base}-x86_64-apple-darwin.tar.gz"
+                sha256 "${sha_mac_intel}"
               end
             end
 
             on_linux do
               on_arm do
-                url "$(url aarch64-unknown-linux-musl)"
-                sha256 "$(sum aarch64-unknown-linux-musl)"
+                url "${base}-aarch64-unknown-linux-musl.tar.gz"
+                sha256 "${sha_linux_arm}"
               end
               on_intel do
-                url "$(url x86_64-unknown-linux-musl)"
-                sha256 "$(sum x86_64-unknown-linux-musl)"
+                url "${base}-x86_64-unknown-linux-musl.tar.gz"
+                sha256 "${sha_linux_intel}"
               end
             end
 
@@ -231,19 +254,26 @@ jobs:
           cd tap
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/ssh-connector.rb
-          if git diff --cached --quiet; then
+          # --untracked-files=all: in a tap without Formula/ yet, plain
+          # --porcelain reports the new directory ("Formula/"), not the file.
+          changed="$(git status --porcelain --untracked-files=all | awk '{print $2}')"
+          if [ -z "$changed" ]; then
             echo "formula already at ${VERSION}"
             exit 0
           fi
+          if [ "$changed" != "Formula/ssh-connector.rb" ]; then
+            echo "::error::refusing to commit unexpected changes: ${changed}"
+            exit 1
+          fi
+          git add Formula/ssh-connector.rb
           git commit -m "ssh-connector ${VERSION}"
           for attempt in 1 2 3 4 5; do
             if git push origin HEAD:main; then
               exit 0
             fi
             echo "push rejected (attempt ${attempt}); rebasing on the tap's main"
-            git pull --rebase origin main
             sleep $((attempt * 3))
+            git pull --rebase origin main
           done
           echo "::error::could not push the formula"
           exit 1
