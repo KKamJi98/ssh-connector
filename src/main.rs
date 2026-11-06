@@ -72,5 +72,14 @@ fn main() -> ExitCode {
         // The panic hook has already reported it.
         Err(_) => 1,
     };
-    ExitCode::from(code as u8)
+    // ExitCode only holds 0-255. On Windows ssh can end with a larger code
+    // (an NTSTATUS such as 0xC000013A); truncating it could turn a failure
+    // into 0, so pass such codes through unchanged.
+    match u8::try_from(code) {
+        Ok(byte) => ExitCode::from(byte),
+        Err(_) => {
+            let _ = std::io::stdout().flush();
+            std::process::exit(code)
+        }
+    }
 }

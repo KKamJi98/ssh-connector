@@ -195,3 +195,20 @@ fn completion_offers_host_names() {
         .unwrap();
     assert_ne!(out.status.code(), Some(0));
 }
+
+/// Windows exit codes go past 255 (NTSTATUS values). They must come through
+/// unchanged; 512 truncated to a byte would read as success.
+#[cfg(windows)]
+#[test]
+fn large_ssh_exit_codes_pass_through() {
+    let sb = sandbox();
+    for code in [300, 512] {
+        let out = sb
+            .command()
+            .env("FAKE_SSH_EXIT", code.to_string())
+            .arg("alpha")
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(code));
+    }
+}
