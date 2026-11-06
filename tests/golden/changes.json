@@ -1,10 +1,10 @@
 {
  "cases": {
   "config-wildcards": {
-   "bug": "3.5",
-   "reason": "negated patterns ('!name') are not listed as hosts",
+   "bug": "3.5, 3.6",
+   "reason": "negated patterns ('!name') are not listed as hosts; '?' wildcard patterns are not listed as hosts",
    "expected": {
-    "stdout": "    Main (2)    \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 1   │ q?wild ║\n║ 2   │ neg    ║\n╚═════╧════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ neg  ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
     "stderr": "",
     "code": 0
    }

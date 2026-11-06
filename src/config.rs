@@ -333,9 +333,13 @@ impl Parser {
             }
             if starts_with_keyword(line, "Host") {
                 for value in line.split_whitespace().skip(1) {
-                    // A name starting with '-' would reach ssh as an option.
-                    // A negated pattern ('!name') matches no host by itself.
-                    if !value.contains('*') && !value.starts_with('-') && !value.starts_with('!') {
+                    // '*' and '?' make a pattern, not a host name. A name
+                    // starting with '-' would reach ssh as an option. A
+                    // negated pattern ('!name') matches no host by itself.
+                    if !value.contains(['*', '?'])
+                        && !value.starts_with('-')
+                        && !value.starts_with('!')
+                    {
                         hosts.push(Entry {
                             host: value.to_string(),
                             source: real_path.clone(),
