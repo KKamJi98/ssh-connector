@@ -117,6 +117,15 @@
     "code": 0
    }
   },
+  "groups-same-basename": {
+   "bug": "3.14",
+   "reason": "included files with the same name, or a file named Main, keep separate groups labelled by their path under ~/.ssh",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m1   ║\n╚═════╧══════╝\n  ~/.ssh/Main (1)  \n╔═════╤═══════════╗\n║ No. │ Host      ║\n╟─────┼───────────╢\n║ 2   │ main-file ║\n╚═════╧═══════════╝\n~/.ssh/a/hosts\n     (2)      \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 3   │ a1   ║\n║ 4   │ m1   ║\n╚═════╧══════╝\n~/.ssh/b/hosts\n     (1)      \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 5   │ b1   ║\n╚═════╧══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "include-env-var": {
    "bug": "3.11",
    "reason": "${VAR} in an Include path is expanded, as ssh does",
@@ -140,6 +149,15 @@
    "reason": "a relative Include is relative to ~/.ssh, as ssh_config(5) says, not to the including file",
    "expected": {
     "stdout": "   Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ base1 ║\n╚═════╧═══════╝\n    01 (1)    \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 2   │ inc1 ║\n╚═════╧══════╝\n           n (1)           \n╔═════╤═══════════════════╗\n║ No. │ Host              ║\n╟─────┼───────────────────╢\n║ 3   │ nested-rel-to-ssh ║\n╚═════╧═══════════════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
+  "include-order-sorted": {
+   "bug": "3.14",
+   "reason": "included files with the same name, or a file named Main, keep separate groups labelled by their path under ~/.ssh",
+   "expected": {
+    "stdout": "   Main (1)   \n╔═════╤══════╗\n║ No. │ Host ║\n╟─────┼──────╢\n║ 1   │ m    ║\n╚═════╧══════╝\n ~/.ssh/a/x (1) \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 2   │ from-a ║\n╚═════╧════════╝\n ~/.ssh/b/x (1) \n╔═════╤════════╗\n║ No. │ Host   ║\n╟─────┼────────╢\n║ 3   │ from-b ║\n╚═════╧════════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Exiting.\n",
     "stderr": "",
     "code": 0
    }

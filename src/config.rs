@@ -388,20 +388,14 @@ pub fn grouped_hosts(config_path: &Path, user_dir: &Path) -> (Groups, Vec<String
     let mut parser = Parser::new(user_dir);
     let entries = parser.parse_file(config_path);
     let main = canonical(config_path).ok();
+    let labels = group_labels(&entries, main.as_deref(), user_dir);
     // (group, host) pairs already listed; a set keeps large configs linear.
     let mut seen: HashSet<(usize, String)> = HashSet::new();
     for Entry { host, source } in entries {
         if is_ignored_host(&host) {
             continue;
         }
-        let group = if Some(&source) == main.as_ref() {
-            "Main".to_string()
-        } else {
-            source
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_default()
-        };
+        let group = labels[&source].clone();
         let idx = match groups.order.iter().position(|g| *g == group) {
             Some(i) => i,
             None => {
@@ -415,6 +409,53 @@ pub fn grouped_hosts(config_path: &Path, user_dir: &Path) -> (Groups, Vec<String
         }
     }
     (groups, parser.errors)
+}
+
+/// A group label per source file: "Main" for the main config, the file name
+/// for an included file. When two included files share a name, or one is
+/// called "Main", those files are labelled by their path (`~/.ssh/a/hosts`)
+/// instead, so their hosts do not merge into one group.
+fn group_labels(
+    entries: &[Entry],
+    main: Option<&Path>,
+    user_dir: &Path,
+) -> std::collections::HashMap<PathBuf, String> {
+    let file_name = |p: &Path| {
+        p.file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_default()
+    };
+    let mut sources: Vec<&Path> = Vec::new();
+    for e in entries {
+        if Some(e.source.as_path()) != main && !sources.contains(&e.source.as_path()) {
+            sources.push(&e.source);
+        }
+    }
+    let user_dir = canonical(user_dir).unwrap_or_else(|_| user_dir.to_path_buf());
+    let mut labels = std::collections::HashMap::new();
+    if let Some(m) = main {
+        labels.insert(m.to_path_buf(), "Main".to_string());
+    }
+    for &src in &sources {
+        let name = file_name(src);
+        let clash = name == "Main" || sources.iter().filter(|&&o| file_name(o) == name).count() > 1;
+        let label = if clash {
+            match src.strip_prefix(&user_dir) {
+                Ok(rel) => {
+                    let parts: Vec<String> = rel
+                        .components()
+                        .map(|c| c.as_os_str().to_string_lossy().to_string())
+                        .collect();
+                    format!("~/.ssh/{}", parts.join("/"))
+                }
+                Err(_) => src.to_string_lossy().to_string(),
+            }
+        } else {
+            name
+        };
+        labels.insert(src.to_path_buf(), label);
+    }
+    labels
 }
 
 /// `get_ssh_hosts`: unique host names in discovery order.
