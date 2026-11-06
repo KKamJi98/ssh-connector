@@ -8,6 +8,10 @@
     # Compare any binary against the recorded fixtures:
     python3 scripts/golden.py compare target/debug/ssh-connector
 
+    # After a deliberate behaviour change, record the new output and why:
+    python3 scripts/golden.py bless target/debug/ssh-connector \
+        --bug 3.1 --reason "ssh's exit code is passed through"
+
 `generate` installs ssh-connector 0.3.1 with the exact click and rich
 versions below into a throwaway venv, runs every case in CASES, and writes
 tests/golden/cases.json. `cargo test` replays that file against the Rust
@@ -16,6 +20,11 @@ binary (tests/golden.rs), so CI needs neither Python nor network access.
 Every case runs with a fresh HOME, a PATH that holds only the fake ssh (or
 nothing), stdin and stdout as pipes, and no environment beyond what the case
 sets. The temporary HOME is written as <HOME> in the recorded output.
+
+cases.json is only ever written by `generate`: it is what Python printed.
+Intended differences (bug fixes) live in changes.json, one entry per case
+with the bug number, the reason and the new expected output, so every line
+that no longer matches Python is accounted for.
 """
 
 from __future__ import annotations
@@ -32,6 +41,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests" / "golden" / "cases.json"
+CHANGES = ROOT / "tests" / "golden" / "changes.json"
 REFERENCE = {"ssh-connector": "0.3.1", "click": "8.5.0", "rich": "15.0.0"}
 
 
@@ -379,21 +389,55 @@ def generate(args) -> None:
     print(f"wrote {len(cases)} cases to {FIXTURE.relative_to(ROOT)}")
 
 
+def load_changes() -> dict:
+    if CHANGES.exists():
+        return json.loads(CHANGES.read_text())["cases"]
+    return {}
+
+
 def compare(args) -> None:
     fake = fake_ssh_path()
     doc = json.loads(FIXTURE.read_text())
+    changes = load_changes()
     failed = 0
     for c in doc["cases"]:
         got = run_case(args.binary, c, fake)
-        if got != c["expected"]:
+        want = changes.get(c["name"], {}).get("expected", c["expected"])
+        if got != want:
             failed += 1
             print(f"--- {c['name']}")
             for k in ("code", "stdout", "stderr"):
-                if got[k] != c["expected"][k]:
-                    print(f"  {k}: expected {c['expected'][k]!r}")
+                if got[k] != want[k]:
+                    print(f"  {k}: expected {want[k]!r}")
                     print(f"  {k}:      got {got[k]!r}")
     print(f"{len(doc['cases']) - failed}/{len(doc['cases'])} cases match")
     sys.exit(1 if failed else 0)
+
+
+def bless(args) -> None:
+    fake = fake_ssh_path()
+    doc = json.loads(FIXTURE.read_text())
+    changes = load_changes()
+    for c in doc["cases"]:
+        name = c["name"]
+        got = run_case(args.binary, c, fake)
+        current = changes.get(name)
+        if got == c["expected"]:
+            if current is not None:
+                print(f"back to the Python output: {name}")
+                del changes[name]
+            continue
+        if current is not None and current["expected"] == got:
+            continue
+        bugs = [] if current is None else current["bug"].split(", ")
+        reasons = [] if current is None else current["reason"].split("; ")
+        if args.bug not in bugs:
+            bugs.append(args.bug)
+            reasons.append(args.reason)
+        changes[name] = {"bug": ", ".join(bugs), "reason": "; ".join(reasons), "expected": got}
+        print(f"changed: {name}")
+    out = {"cases": dict(sorted(changes.items()))}
+    CHANGES.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
 
 
 def main() -> None:
@@ -404,6 +448,11 @@ def main() -> None:
     c = sub.add_parser("compare")
     c.add_argument("binary")
     c.set_defaults(func=compare)
+    b = sub.add_parser("bless")
+    b.add_argument("binary")
+    b.add_argument("--bug", required=True)
+    b.add_argument("--reason", required=True)
+    b.set_defaults(func=bless)
     args = ap.parse_args()
     args.func(args)
 

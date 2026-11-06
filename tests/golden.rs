@@ -1,6 +1,8 @@
 //! Replays tests/golden/cases.json (recorded from the Python version by
 //! scripts/golden.py) against the Rust binary. stdout, stderr and the exit
-//! code must match byte for byte.
+//! code must match byte for byte, except for the cases listed in
+//! tests/golden/changes.json: deliberate fixes, each with its bug number,
+//! reason and new expected output.
 
 mod common;
 
@@ -113,6 +115,7 @@ fn run(c: &Value) -> Option<(String, String, i32)> {
 #[test]
 fn matches_python_reference() {
     let doc: Value = serde_json::from_str(include_str!("golden/cases.json")).unwrap();
+    let changes: Value = serde_json::from_str(include_str!("golden/changes.json")).unwrap();
     let mut failures = Vec::new();
     let mut ran = 0;
     for c in doc["cases"].as_array().unwrap() {
@@ -121,7 +124,10 @@ fn matches_python_reference() {
             continue;
         };
         ran += 1;
-        let e = &c["expected"];
+        let e = changes["cases"]
+            .get(name)
+            .map(|ch| &ch["expected"])
+            .unwrap_or(&c["expected"]);
         if stdout != e["stdout"].as_str().unwrap()
             || stderr != e["stderr"].as_str().unwrap()
             || i64::from(code) != e["code"].as_i64().unwrap()
