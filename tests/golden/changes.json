@@ -9,6 +9,24 @@
     "code": 0
    }
   },
+  "filter-match": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term:    Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"alpha\"]\n",
+    "code": 0
+   }
+  },
+  "filter-then-number": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Enter filter term:    Main (1)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ gamma ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to gamma...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"gamma\"]\n",
+    "code": 0
+   }
+  },
   "pick-eof": {
    "bug": "3.3",
    "reason": "end of input quits like q (Exiting., exit 0); Ctrl-C exits 130 instead of Aborted! and 1",
@@ -18,30 +36,102 @@
     "code": 0
    }
   },
+  "pick-eof-partial": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to beta...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"beta\"]\n",
+    "code": 0
+   }
+  },
+  "pick-jump-number": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to jump-a...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"jump-a\"]\n",
+    "code": 0
+   }
+  },
+  "pick-name-case": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to gamma...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"gamma\"]\n",
+    "code": 0
+   }
+  },
+  "pick-name-is-number": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ 1     ║\n╚═════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to 1...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"1\"]\n",
+    "code": 0
+   }
+  },
+  "pick-number": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to beta...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"beta\"]\n",
+    "code": 0
+   }
+  },
+  "pick-plus-number": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"alpha\"]\n",
+    "code": 0
+   }
+  },
+  "pick-whitespace-number": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to beta...\n",
+    "stderr": "fake-ssh argv=[\"--\", \"beta\"]\n",
+    "code": 0
+   }
+  },
+  "ssh-dash-host": {
+   "bug": "3.4",
+   "reason": "hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
+   "expected": {
+    "stdout": "No valid SSH hosts found.\n",
+    "stderr": "",
+    "code": 0
+   }
+  },
   "ssh-exit-1": {
-   "bug": "3.1",
-   "reason": "ssh's exit code is passed through instead of always exiting 0",
+   "bug": "3.1, 3.4",
+   "reason": "ssh's exit code is passed through instead of always exiting 0; hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
    "expected": {
     "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
-    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "stderr": "fake-ssh argv=[\"--\", \"alpha\"]\n",
     "code": 1
    }
   },
   "ssh-exit-130": {
-   "bug": "3.1",
-   "reason": "ssh's exit code is passed through instead of always exiting 0",
+   "bug": "3.1, 3.4",
+   "reason": "ssh's exit code is passed through instead of always exiting 0; hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
    "expected": {
     "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
-    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "stderr": "fake-ssh argv=[\"--\", \"alpha\"]\n",
     "code": 130
    }
   },
   "ssh-exit-255": {
-   "bug": "3.1",
-   "reason": "ssh's exit code is passed through instead of always exiting 0",
+   "bug": "3.1, 3.4",
+   "reason": "ssh's exit code is passed through instead of always exiting 0; hosts starting with '-' are not listed, and ssh gets the host after '--' so it is never read as an option",
    "expected": {
     "stdout": "   Main (3)    \n╔═════╤═══════╗\n║ No. │ Host  ║\n╟─────┼───────╢\n║ 1   │ alpha ║\n║ 2   │ beta  ║\n║ 3   │ gamma ║\n╚═════╧═══════╝\n     JUMP-HOSTS (1)     \n╔═════╤════════╤═══════╗\n║ No. │ Host   │ Group ║\n╟─────┼────────┼───────╢\n║ 4   │ jump-a │ Main  ║\n╚═════╧════════╧═══════╝\nEnter the number or name of the host to connect to (or 'q' to quit, 'f' to filter): Connecting to alpha...\nSSH session for alpha ended.\n",
-    "stderr": "fake-ssh argv=[\"alpha\"]\n",
+    "stderr": "fake-ssh argv=[\"--\", \"alpha\"]\n",
     "code": 255
    }
   },

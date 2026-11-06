@@ -333,7 +333,8 @@ impl Parser {
             }
             if starts_with_keyword(line, "Host") {
                 for value in line.split_whitespace().skip(1) {
-                    if !value.contains('*') {
+                    // A name starting with '-' would reach ssh as an option.
+                    if !value.contains('*') && !value.starts_with('-') {
                         hosts.push(Entry {
                             host: value.to_string(),
                             source: real_path.clone(),

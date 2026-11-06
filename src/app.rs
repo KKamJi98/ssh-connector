@@ -293,7 +293,8 @@ impl Out<'_> {
 fn connect(out: &mut Out, host: &str) -> Res<i32> {
     INTERRUPTED.store(false, Ordering::SeqCst);
     MODE.store(MODE_CHILD, Ordering::SeqCst);
-    let child = Command::new("ssh").arg(host).spawn();
+    // `--` keeps the host from ever being read as an ssh option.
+    let child = Command::new("ssh").arg("--").arg(host).spawn();
     let mut child = match child {
         Ok(c) => c,
         Err(e) if e.kind() == io::ErrorKind::NotFound => {
