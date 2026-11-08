@@ -1,48 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 500" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 915" role="img" aria-labelledby="title desc">
   <title id="title">Your SSH config in. OpenSSH out.</title>
   <desc id="desc">ssh-connector reads host aliases from the main SSH config and included files, groups them by file, and lets you select a host. It starts system ssh with the selected alias and inherits the terminal. Your config is not rewritten, and the SSH exit code is returned.</desc>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#64748b"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="#64748b"/></marker>
   </defs>
-  <rect width="1160" height="500" fill="#ffffff"/>
+  <rect width="900" height="915" fill="#ffffff"/>
   <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fill="#172033">
     <text x="40" y="48" font-size="28" font-weight="700">Your SSH config in. OpenSSH out.</text>
     <text x="40" y="79" font-size="16" fill="#475569">A host picker in front of the SSH client you already use.</text>
-    <g fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)">
-      <path d="M290 163H420"/>
-      <path d="M165 206V269"/>
-      <path d="M290 315H354V253H420"/>
-      <path d="M710 185H819"/>
-      <path d="M965 235V339"/>
-    </g>
-    <g font-size="14" fill="#475569">
-      <text x="315" y="148">Host aliases</text>
-      <text x="179" y="242">Include paths</text>
-      <text x="304" y="339">Included aliases</text>
-      <text x="717" y="164">Visible hosts</text>
-      <text x="980" y="290">Selected alias</text>
-    </g>
-    <rect x="40" y="120" width="250" height="86" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
-    <text x="60" y="151" font-size="14" font-weight="600" fill="#64748b">01 / READ EXISTING CONFIG</text>
-    <text x="60" y="181" font-size="21" font-weight="600">~/.ssh/config</text>
-    <rect x="40" y="270" width="250" height="90" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
-    <text x="60" y="301" font-size="18" font-weight="600">Included files</text>
-    <text x="60" y="329" font-size="15" fill="#475569">e.g. config.d/lab</text>
-    <rect x="420" y="120" width="290" height="170" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
-    <text x="442" y="151" font-size="14" font-weight="600" fill="#1d4ed8">02 / GROUP BY SOURCE FILE</text>
-    <text x="442" y="184" font-size="22" font-weight="700">ssh-connector</text>
-    <path d="M442 203H688" stroke="#bfdbfe"/>
-    <text x="442" y="230" font-size="16">Main</text><text x="540" y="230" font-size="16" fill="#475569">web-01, bastion</text>
-    <text x="442" y="258" font-size="16">lab</text><text x="540" y="258" font-size="16" fill="#475569">web-02, api-01</text>
-    <rect x="820" y="135" width="290" height="100" rx="12" fill="#f5f3ff" stroke="#c4b5fd"/>
-    <text x="842" y="165" font-size="14" font-weight="600" fill="#6d28d9">03 / PICK A HOST</text>
-    <text x="842" y="198" font-size="21" font-weight="600">Number, name, or filter</text>
-    <rect x="820" y="340" width="290" height="110" rx="12" fill="#f0fdf4" stroke="#86efac"/>
-    <text x="842" y="369" font-size="14" font-weight="600" fill="#166534">04 / START SYSTEM OPENSSH</text>
-    <text x="842" y="402" font-size="22" font-weight="700">ssh -- &lt;host&gt;</text>
-    <text x="842" y="429" font-size="15" fill="#475569">Inherited TTY. SSH exit code returned.</text>
-    <text x="40" y="421" font-size="17" font-weight="600">No second host inventory.</text>
-    <text x="40" y="450" font-size="16" fill="#475569">ssh-connector never rewrites your SSH config.</text>
-    <text x="40" y="478" font-size="15" fill="#475569">OpenSSH still handles keys, User, ProxyJump, and authentication.</text>
+
+    <rect id="config" x="120" y="115" width="660" height="140" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="142" y="145" font-size="16" font-weight="600" fill="#64748b">01 / READ EXISTING CONFIG</text>
+    <text x="142" y="183" font-size="22" font-weight="600">~/.ssh/config</text>
+    <text x="500" y="183" font-size="20" font-weight="600">Included files</text>
+    <text x="500" y="211" font-size="17" fill="#475569">e.g. config.d/lab</text>
+    <text x="142" y="236" font-size="16" fill="#475569">Follow Include paths; read host aliases from both.</text>
+
+    <line id="host-aliases" x1="450" y1="255" x2="450" y2="315" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="468" y="285" font-size="17" dominant-baseline="middle" fill="#475569">Host aliases</text>
+
+    <rect id="groups" x="120" y="315" width="660" height="150" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="142" y="345" font-size="16" font-weight="600" fill="#1d4ed8">02 / GROUP BY SOURCE FILE</text>
+    <text x="142" y="379" font-size="22" font-weight="700">ssh-connector</text>
+    <text x="142" y="413" font-size="18">Main</text><text x="270" y="413" font-size="18" fill="#475569">web-01, bastion</text>
+    <text x="142" y="443" font-size="18">lab</text><text x="270" y="443" font-size="18" fill="#475569">web-02, api-01</text>
+
+    <line id="visible-hosts" x1="450" y1="465" x2="450" y2="525" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="468" y="495" font-size="17" dominant-baseline="middle" fill="#475569">Visible hosts</text>
+
+    <rect id="selection" x="120" y="525" width="660" height="100" rx="12" fill="#f5f3ff" stroke="#c4b5fd"/>
+    <text x="142" y="555" font-size="16" font-weight="600" fill="#6d28d9">03 / PICK A HOST</text>
+    <text x="142" y="591" font-size="22" font-weight="600">Number, name, or filter</text>
+
+    <line id="selected-alias" x1="450" y1="625" x2="450" y2="685" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="468" y="655" font-size="17" dominant-baseline="middle" fill="#475569">Selected alias</text>
+
+    <rect id="ssh" x="120" y="685" width="660" height="110" rx="12" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="142" y="715" font-size="16" font-weight="600" fill="#166534">04 / START SYSTEM OPENSSH</text>
+    <text x="142" y="751" font-size="22" font-weight="700">ssh -- &lt;host&gt;</text>
+    <text x="142" y="779" font-size="17" fill="#475569">Inherited TTY. SSH exit code returned.</text>
+
+    <text x="120" y="835" font-size="18" font-weight="600">No second host inventory.</text>
+    <text x="120" y="863" font-size="16" fill="#475569">ssh-connector never rewrites your SSH config.</text>
+    <text x="120" y="891" font-size="16" fill="#475569">OpenSSH still handles keys, User, ProxyJump, and authentication.</text>
   </g>
 </svg>
