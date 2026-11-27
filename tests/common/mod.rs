@@ -7,10 +7,9 @@ use std::process::Command;
 pub const BIN: &str = env!("CARGO_BIN_EXE_ssh-connector");
 
 /// The fake ssh built from `examples/fake-ssh.rs`. `cargo test` builds
-/// examples next to the test binaries.
+/// examples next to the package binaries.
 pub fn fake_ssh() -> PathBuf {
-    let exe = std::env::current_exe().unwrap();
-    let debug_dir = exe.parent().unwrap().parent().unwrap();
+    let debug_dir = std::path::Path::new(BIN).parent().unwrap();
     let name = format!("fake-ssh{}", std::env::consts::EXE_SUFFIX);
     let p = debug_dir.join("examples").join(name);
     assert!(
